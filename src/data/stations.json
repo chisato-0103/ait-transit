@@ -1,0 +1,242 @@
+[
+  {
+    "station_code": "yakusa",
+    "station_name": "八草",
+    "station_name_en": "Yakusa",
+    "order_index": 1,
+    "travel_time_from_yakusa": 0,
+    "line_type": null
+  },
+  {
+    "station_code": "tojishiryokanminami",
+    "station_name": "陶磁資料館南",
+    "station_name_en": "Tojishiryokan Minami",
+    "order_index": 2,
+    "travel_time_from_yakusa": 3,
+    "line_type": "linimo"
+  },
+  {
+    "station_code": "aichikyuhakukinenkoen",
+    "station_name": "愛・地球博記念公園",
+    "station_name_en": "Ai･Chikyuhaku Kinen Koen",
+    "order_index": 3,
+    "travel_time_from_yakusa": 5,
+    "line_type": "linimo"
+  },
+  {
+    "station_code": "koennishi",
+    "station_name": "公園西",
+    "station_name_en": "Koen Nishi",
+    "order_index": 4,
+    "travel_time_from_yakusa": 7,
+    "line_type": "linimo"
+  },
+  {
+    "station_code": "geidaidori",
+    "station_name": "芸大通",
+    "station_name_en": "Geidai-dori",
+    "order_index": 5,
+    "travel_time_from_yakusa": 9,
+    "line_type": "linimo"
+  },
+  {
+    "station_code": "nagakutekosenjo",
+    "station_name": "長久手古戦場",
+    "station_name_en": "Nagakute Kosenjo",
+    "order_index": 6,
+    "travel_time_from_yakusa": 11,
+    "line_type": "linimo"
+  },
+  {
+    "station_code": "irigaikekoen",
+    "station_name": "杁ヶ池公園",
+    "station_name_en": "Irigaike Koen",
+    "order_index": 7,
+    "travel_time_from_yakusa": 13,
+    "line_type": "linimo"
+  },
+  {
+    "station_code": "hanamizukidori",
+    "station_name": "はなみずき通",
+    "station_name_en": "Hanamizuki-dori",
+    "order_index": 8,
+    "travel_time_from_yakusa": 15,
+    "line_type": "linimo"
+  },
+  {
+    "station_code": "fujigaoka",
+    "station_name": "藤が丘",
+    "station_name_en": "Fujigaoka",
+    "order_index": 9,
+    "travel_time_from_yakusa": 17,
+    "line_type": "linimo"
+  },
+  {
+    "station_code": "okazaki",
+    "station_name": "岡崎",
+    "station_name_en": "Okazaki",
+    "order_index": 10,
+    "travel_time_from_yakusa": 50,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "nakaokazaki",
+    "station_name": "中岡崎",
+    "station_name_en": "Naka-Okazaki",
+    "order_index": 11,
+    "travel_time_from_yakusa": 44,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "kitaokazaki",
+    "station_name": "北岡崎",
+    "station_name_en": "Kita-Okazaki",
+    "order_index": 12,
+    "travel_time_from_yakusa": 41,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "mikawatoyota",
+    "station_name": "三河豊田",
+    "station_name_en": "Mikawa-Toyota",
+    "order_index": 13,
+    "travel_time_from_yakusa": 24,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "shintoyota",
+    "station_name": "新豊田",
+    "station_name_en": "Shin-Toyota",
+    "order_index": 14,
+    "travel_time_from_yakusa": 18,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "aikanumetubo",
+    "station_name": "愛環梅坪",
+    "station_name_en": "Aikan-Umetsubo",
+    "order_index": 15,
+    "travel_time_from_yakusa": 15,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "nakamizuno",
+    "station_name": "中水野",
+    "station_name_en": "Nakamizuno",
+    "order_index": 16,
+    "travel_time_from_yakusa": 13,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "setoshi",
+    "station_name": "瀬戸市",
+    "station_name_en": "Setoshi",
+    "order_index": 17,
+    "travel_time_from_yakusa": 10,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "setoguchi",
+    "station_name": "瀬戸口",
+    "station_name_en": "Setoguchi",
+    "order_index": 18,
+    "travel_time_from_yakusa": 7,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "sasabara",
+    "station_name": "篠原",
+    "station_name_en": "Sasabara",
+    "order_index": 19,
+    "travel_time_from_yakusa": 4,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "kitanomasuduka",
+    "station_name": "北野桝塚",
+    "station_name_en": "Kitano-Masuzuka",
+    "order_index": 20,
+    "travel_time_from_yakusa": 36,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "mutsuna",
+    "station_name": "六名",
+    "station_name_en": "Mutsuna",
+    "order_index": 21,
+    "travel_time_from_yakusa": 47,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "shigo",
+    "station_name": "四郷",
+    "station_name_en": "Shigo",
+    "order_index": 22,
+    "travel_time_from_yakusa": 12,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "ekaku",
+    "station_name": "永覚",
+    "station_name_en": "Ekaku",
+    "order_index": 23,
+    "travel_time_from_yakusa": 30,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "homi",
+    "station_name": "保見",
+    "station_name_en": "Homi",
+    "order_index": 24,
+    "travel_time_from_yakusa": 7,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "kaizu",
+    "station_name": "貝津",
+    "station_name_en": "Kaizu",
+    "order_index": 25,
+    "travel_time_from_yakusa": 9,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "mikawakamigo",
+    "station_name": "三河上郷",
+    "station_name_en": "Mikawa-Kamigo",
+    "order_index": 26,
+    "travel_time_from_yakusa": 33,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "shinuwagoromo",
+    "station_name": "新上挙母",
+    "station_name_en": "Shin-Uwagoromo",
+    "order_index": 27,
+    "travel_time_from_yakusa": 21,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "suenohara",
+    "station_name": "末野原",
+    "station_name_en": "Suenohara",
+    "order_index": 28,
+    "travel_time_from_yakusa": 27,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "yamaguchi",
+    "station_name": "山口",
+    "station_name_en": "Yamaguchi",
+    "order_index": 29,
+    "travel_time_from_yakusa": 4,
+    "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "kozoji",
+    "station_name": "高蔵寺",
+    "station_name_en": "Kozoji",
+    "order_index": 30,
+    "travel_time_from_yakusa": 17,
+    "line_type": "aichi_kanjo"
+  }
+]

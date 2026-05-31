@@ -1,0 +1,218 @@
+/* ===== リセット & ベース ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --primary: #0066cc;
+  --primary-dark: #0052a3;
+  --secondary: #ff6b35;
+  --success: #28a745;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --text: #333;
+  --bg: #f5f5f5;
+  --white: #fff;
+  --border: #ddd;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif, "Yu Gothic", YuGothic, "Hiragino Kaku Gothic ProN", Meiryo;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+a { color: var(--primary); }
+
+/* ===== ヘッダー ===== */
+.header {
+  background: var(--primary);
+  color: var(--white);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.header h1 { font-size: 1.5rem; font-weight: bold; }
+.header p { font-size: 0.9rem; margin-top: 0.25rem; opacity: 0.9; }
+
+/* ===== コンテナ ===== */
+.container { max-width: 900px; margin: 0 auto; padding: 1rem; }
+
+/* ===== 警告バナー ===== */
+.alert-banner {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #856404;
+}
+.alert-banner strong { display: block; margin-bottom: 0.25rem; }
+
+/* ===== 現在時刻 ===== */
+.current-time-wrapper {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0,102,204,0.15);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  justify-content: center;
+}
+.current-time-label { font-size: 1rem; font-weight: 500; opacity: 0.85; }
+.current-time { font-size: 1.5rem; font-weight: bold; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+
+/* ===== ルート検索エリア ===== */
+.search-area {
+  background: var(--white);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+.section-header {
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary);
+}
+.form-group { margin-bottom: 0.75rem; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.9rem; }
+.route-selection { display: flex; flex-direction: column; gap: 0.4rem; }
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+.radio-option:hover { background: #f0f4ff; }
+.radio-option input[type="radio"]:checked + span { font-weight: 600; color: var(--primary); }
+select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: var(--white);
+}
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary { background: var(--primary); color: var(--white); }
+.btn-primary:hover { background: var(--primary-dark); }
+
+/* ===== ルートカード ===== */
+.next-departure { margin-bottom: 1rem; }
+
+.route-card {
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+.route-card-primary {
+  border: 2px solid var(--primary);
+}
+.route-card-header {
+  background: var(--primary);
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+.route-label { font-weight: bold; font-size: 1rem; }
+.route-from-to { opacity: 0.9; font-size: 0.85rem; }
+
+.route-details { padding: 1rem; }
+.route-times { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
+.route-step { display: flex; align-items: flex-start; gap: 0.75rem; }
+.step-icon { font-size: 1.4rem; line-height: 1; }
+.step-info { flex: 1; }
+.step-label { font-size: 0.78rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.step-time { font-size: 1.15rem; font-weight: bold; color: var(--text); font-family: 'Courier New', monospace; }
+.step-dest { font-size: 0.85rem; color: var(--primary); margin-top: 0.15rem; }
+
+.route-connector {
+  display: flex;
+  align-items: center;
+  padding-left: 2.2rem;
+}
+.transfer-time { font-size: 0.8rem; color: #888; background: #f5f5f5; padding: 0.15rem 0.5rem; border-radius: 10px; }
+
+.route-summary {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.waiting-badge, .total-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.waiting-badge { background: #e8f4fd; color: var(--primary); }
+.total-badge { background: #f0f9ff; color: #0088cc; }
+
+/* ===== その他の便 ===== */
+.results { margin-bottom: 1rem; }
+.results-header { font-size: 1rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text); }
+
+/* ===== 代替便 ===== */
+.alt-options {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+}
+.alt-options summary { cursor: pointer; color: var(--primary); font-weight: 600; }
+.alt-option { padding: 0.25rem 0.5rem; color: #555; }
+
+/* ===== 運行終了・運休 ===== */
+.service-info-card {
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.service-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.service-message { font-size: 1.15rem; font-weight: bold; margin-bottom: 0.75rem; }
+.service-detail { font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.25rem; }
+
+/* ===== ダイヤ情報フッター ===== */
+.dia-info {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
+  padding: 0.75rem 1rem 1.5rem;
+}
+
+/* ===== ローディング ===== */
+.loading-screen { display: flex; align-items: center; justify-content: center; height: 60vh; font-size: 1.1rem; color: #888; }
+
+/* ===== レスポンシブ ===== */
+@media (min-width: 640px) {
+  .route-selection { display: grid; grid-template-columns: 1fr 1fr; }
+  .route-summary { justify-content: flex-start; }
+}
