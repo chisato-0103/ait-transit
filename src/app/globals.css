@@ -211,6 +211,23 @@ select {
 /* ===== ローディング ===== */
 .loading-screen { display: flex; align-items: center; justify-content: center; height: 60vh; font-size: 1.1rem; color: #888; }
 
+/* ===== お知らせ ===== */
+.notices-section { margin-bottom: 1rem; }
+.notice-item {
+  border-left: 4px solid var(--primary);
+  background: var(--white);
+  border-radius: 0 8px 8px 0;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  box-shadow: var(--shadow);
+}
+.notice-warning { border-left-color: var(--warning); }
+.notice-alert { border-left-color: var(--danger); }
+.notice-meta { margin-bottom: 0.2rem; }
+.notice-date { font-size: 0.75rem; color: #888; }
+.notice-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 0.25rem; }
+.notice-body { font-size: 0.875rem; color: #555; line-height: 1.5; }
+
 /* ===== レスポンシブ ===== */
 @media (min-width: 640px) {
   .route-selection { display: grid; grid-template-columns: 1fr 1fr; }

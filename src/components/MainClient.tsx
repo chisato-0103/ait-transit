@@ -59,12 +59,22 @@ interface ServiceInfo {
 
 type RouteOption = "to_linimo" | "from_linimo" | "to_aichi_kanjo" | "from_aichi_kanjo";
 
+interface Notice {
+  id: number;
+  date: string;
+  title: string;
+  body: string;
+  type: "info" | "warning" | "alert";
+  active: boolean;
+}
+
 export default function MainClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [currentTime, setCurrentTime] = useState("");
   const [stations, setStations] = useState<Station[]>([]);
+  const [notices, setNotices] = useState<Notice[]>([]);
   const [apiData, setApiData] = useState<ApiResponse["data"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [routeOption, setRouteOptionState] = useState<RouteOption>("to_linimo");
@@ -89,6 +99,13 @@ export default function MainClient() {
     fetch("/api/stations")
       .then((r) => r.json())
       .then((json) => setStations(json.data ?? []));
+  }, []);
+
+  // お知らせを取得
+  useEffect(() => {
+    fetch("/api/notices")
+      .then((r) => r.json())
+      .then((json) => setNotices(json.data ?? []));
   }, []);
 
   // URLパラメータから初期値を設定
@@ -172,6 +189,22 @@ export default function MainClient() {
             でご確認ください。
           </p>
         </div>
+
+        {/* お知らせ */}
+        {notices.length > 0 && (
+          <section className="notices-section">
+            <div className="section-header">📢 お知らせ</div>
+            {notices.map((n) => (
+              <div key={n.id} className={`notice-item notice-${n.type}`}>
+                <div className="notice-meta">
+                  <span className="notice-date">{n.date}</span>
+                </div>
+                <div className="notice-title">{n.title}</div>
+                <div className="notice-body">{n.body}</div>
+              </div>
+            ))}
+          </section>
+        )}
 
         {/* 現在時刻 */}
         <div className="current-time-wrapper">
