@@ -4,6 +4,7 @@
 
 import shuttleBusTimetableRaw from "@/data/shuttle_bus_timetable.json";
 import linimoTimetableRaw from "@/data/linimo_timetable.json";
+import aichiKanjoTimetableRaw from "@/data/aichi_kanjo_timetable.json";
 import stationsRaw from "@/data/stations.json";
 import shuttleScheduleRaw from "@/data/shuttle_schedule.json";
 
@@ -16,6 +17,7 @@ export type DayType = "weekday_green" | "holiday_red";
 export type Direction = "to_station" | "to_university";
 export type ShuttleDirection = "to_university" | "to_yagusa";
 export type LinimoDirection = "to_fujigaoka" | "to_yagusa";
+export type AichiKanjoDirection = "to_kozoji" | "to_okazaki";
 
 export interface Station {
   station_code: string;
@@ -39,6 +41,15 @@ export interface LinimoEntry {
   direction: string;
   departure_time: string;
   day_type: string;
+}
+
+export interface AichiKanjoEntry {
+  station_code: string;
+  station_name: string;
+  direction: string;
+  departure_time: string;
+  day_type: string;
+  terminal: string;
 }
 
 export interface LinimoOption {
@@ -211,6 +222,32 @@ export function getNextShuttleBuses(
     .slice(0, limit);
 }
 
+// 八草から高蔵寺方面にある駅（to_kozoji 方向で到達できる駅）
+const KOZOJI_SIDE_STATIONS = new Set([
+  "yamaguchi", "setoguchi", "setoshi", "nakamizuno", "kozoji",
+]);
+
+export function getAichiKanjoDirectionFromYakusa(stationCode: string): AichiKanjoDirection {
+  return KOZOJI_SIDE_STATIONS.has(stationCode) ? "to_kozoji" : "to_okazaki";
+}
+
+export function getAichiKanjoDirectionToYakusa(stationCode: string): AichiKanjoDirection {
+  return KOZOJI_SIDE_STATIONS.has(stationCode) ? "to_okazaki" : "to_kozoji";
+}
+
+export function getNextAichiKanjoTrains(
+  stationCode: string,
+  direction: AichiKanjoDirection,
+  currentTime: string,
+  limit = 5
+): AichiKanjoEntry[] {
+  const searchTime = currentTime.length === 5 ? currentTime + ":00" : currentTime;
+  return (aichiKanjoTimetableRaw as AichiKanjoEntry[])
+    .filter((r) => r.station_code === stationCode && r.direction === direction && r.day_type === "weekday_green" && timeGte(r.departure_time, searchTime))
+    .sort((a, b) => timeToMinutes(a.departure_time) - timeToMinutes(b.departure_time))
+    .slice(0, limit);
+}
+
 export function getNextLinimoTrains(
   stationCode: string,
   direction: LinimoDirection,
@@ -265,6 +302,46 @@ export function calculateUniversityToStation(
     }));
   }
 
+  if (dest.line_type === "aichi_kanjo") {
+    const dirFromYakusa = getAichiKanjoDirectionFromYakusa(destinationCode);
+    const travelTime = dest.travel_time_from_yakusa;
+    const shuttles = getNextShuttleBuses("to_yagusa", currentTime, diaType, 10);
+    const routes: RouteResult[] = [];
+
+    for (const shuttle of shuttles) {
+      const yagusaArrival = shuttle.arrival_time;
+      const minTrainTime = addMinutes(yagusaArrival, TRANSFER_TIME_MINUTES);
+      const trainOpts = getNextAichiKanjoTrains("yakusa", dirFromYakusa, minTrainTime, 3);
+      if (!trainOpts.length) continue;
+
+      const train = trainOpts[0];
+      const destArrival = addMinutes(train.departure_time, travelTime);
+
+      routes.push({
+        shuttle_departure: formatTime(shuttle.departure_time),
+        shuttle_arrival: formatTime(yagusaArrival),
+        linimo_departure: formatTime(train.departure_time),
+        destination_arrival: formatTime(destArrival),
+        transfer_time: calculateDuration(yagusaArrival, train.departure_time),
+        total_time: calculateDuration(currentTime, destArrival),
+        waiting_time: calculateDuration(currentTime, shuttle.departure_time),
+        destination_name: dest.station_name,
+        linimo_options: trainOpts.map((opt) => {
+          const optDest = addMinutes(opt.departure_time, travelTime);
+          return {
+            linimo_departure: formatTime(opt.departure_time),
+            destination_arrival: formatTime(optDest),
+            transfer_time: calculateDuration(yagusaArrival, opt.departure_time),
+            total_time: calculateDuration(currentTime, optDest),
+            linimo_time: travelTime,
+          };
+        }),
+      });
+      if (routes.length >= limit) break;
+    }
+    return routes;
+  }
+
   const linimoTravelTime = dest.travel_time_from_yakusa;
   const shuttles = getNextShuttleBuses("to_yagusa", currentTime, diaType, 10);
   const routes: RouteResult[] = [];
@@ -313,6 +390,42 @@ export function calculateStationToUniversity(
 ): RouteResult[] {
   const originInfo = getStationByCode(originCode);
   if (!originInfo) return [];
+
+  if (originInfo.line_type === "aichi_kanjo") {
+    const dirToYakusa = getAichiKanjoDirectionToYakusa(originCode);
+    const travelTime = originInfo.travel_time_from_yakusa;
+    const trains = getNextAichiKanjoTrains(originCode, dirToYakusa, currentTime, 30);
+    const routes: RouteResult[] = [];
+
+    for (const train of trains) {
+      const originDeparture = train.departure_time;
+      const yagusaArrival = addMinutes(originDeparture, travelTime);
+      const minShuttleTime = addMinutes(yagusaArrival, TRANSFER_TIME_MINUTES);
+      const shuttles = getNextShuttleBuses("to_university", minShuttleTime, diaType, 3);
+      if (!shuttles.length) continue;
+
+      const shuttle = shuttles[0];
+      routes.push({
+        linimo_departure: formatTime(originDeparture),
+        linimo_arrival: formatTime(yagusaArrival),
+        shuttle_departure: formatTime(shuttle.departure_time),
+        shuttle_arrival: formatTime(shuttle.arrival_time),
+        transfer_time: calculateDuration(yagusaArrival, shuttle.departure_time),
+        total_time: calculateDuration(originDeparture, shuttle.arrival_time),
+        waiting_time: calculateDuration(currentTime, originDeparture),
+        linimo_time: travelTime,
+        origin_name: originInfo.station_name,
+        shuttle_options: shuttles.map((opt) => ({
+          shuttle_departure: formatTime(opt.departure_time),
+          shuttle_arrival: formatTime(opt.arrival_time),
+          transfer_time: calculateDuration(yagusaArrival, opt.departure_time),
+          total_time: calculateDuration(currentTime, opt.arrival_time),
+        })),
+      });
+      if (routes.length >= limit) break;
+    }
+    return routes;
+  }
 
   const linimoTravelTime = originInfo.travel_time_from_yakusa;
   let linimoTrains = getNextLinimoTrains(originCode, "to_yagusa", currentTime, dayType, 30);
