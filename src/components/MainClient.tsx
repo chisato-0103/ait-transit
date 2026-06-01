@@ -102,7 +102,6 @@ function useCountdown(departureTime: string): { text: string; urgent: boolean } 
       const [h, m] = departureTime.split(":").map(Number);
       const dep = new Date();
       dep.setHours(h, m, 0, 0);
-      if (dep < now) dep.setDate(dep.getDate() + 1);
       const diff = Math.floor((dep.getTime() - now.getTime()) / 1000);
       if (diff <= 0) {
         setState({ text: "出発しました", urgent: true });
