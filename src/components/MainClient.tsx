@@ -134,7 +134,7 @@ export default function MainClient() {
   const [routeOption, setRouteOption] = useState<RouteOption>("to_linimo");
   const [destination, setDestination] = useState("fujigaoka");
   const [origin, setOrigin] = useState("fujigaoka");
-  const [searchOpen, setSearchOpen] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [noticesOpen, setNoticesOpen] = useState(false);
   const [nextDepExpanded, setNextDepExpanded] = useState(false);
 
