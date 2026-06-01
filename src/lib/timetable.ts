@@ -157,9 +157,10 @@ export function getDiaType(dateStr: string): DiaType {
   );
   if (schedule) return schedule.dia_type as DiaType;
 
-  const date = new Date(dateStr + "T00:00:00+09:00");
-  const dow = date.getDay();
-  const month = date.getMonth() + 1;
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, mo - 1, d));
+  const dow = date.getUTCDay();
+  const month = mo;
   if (dow === 0) return "holiday";
   if (dow === 6) return "B";
   if ([8, 9, 2, 3].includes(month)) return "C";
@@ -181,9 +182,9 @@ export function getTodayStr(): string {
 }
 
 export function getTomorrowStr(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00+09:00");
-  d.setDate(d.getDate() + 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const tomorrow = new Date(Date.UTC(y, mo - 1, d + 1));
+  return `${tomorrow.getUTCFullYear()}-${String(tomorrow.getUTCMonth() + 1).padStart(2, "0")}-${String(tomorrow.getUTCDate()).padStart(2, "0")}`;
 }
 
 // ============================================================
