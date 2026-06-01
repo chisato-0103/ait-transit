@@ -103,11 +103,9 @@ a { color: var(--primary-color); }
 .collapsible.active .collapsible-icon { transform: rotate(180deg); }
 .collapsible-content {
   display: grid;
-  grid-template-rows: 0fr;
   overflow: hidden;
   transition: grid-template-rows 0.3s ease;
 }
-.collapsible.active .collapsible-content { grid-template-rows: 1fr; }
 .collapsible-content-inner { min-height: 0; }
 
 /* ===================================

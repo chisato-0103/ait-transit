@@ -267,12 +267,12 @@ export default function MainClient() {
         </div>
 
         {/* ルート検索（折りたたみ） */}
-        <section className={`search-area collapsible ${searchOpen ? "active" : ""}`}>
+        <section className="search-area collapsible">
           <div className="collapsible-header" onClick={() => setSearchOpen((v) => !v)}>
             <span>📍 ルート検索</span>
-            <span className="collapsible-icon">▼</span>
+            <span className="collapsible-icon" style={{ transform: searchOpen ? "rotate(180deg)" : "none", transition: "transform 0.3s ease" }}>▼</span>
           </div>
-          <div className="collapsible-content">
+          <div className="collapsible-content" style={{ gridTemplateRows: searchOpen ? "1fr" : "0fr" }}>
             <div className="collapsible-content-inner">
             <form className="search-form" onSubmit={handleSearch}>
               <div className="form-group">
@@ -361,12 +361,12 @@ export default function MainClient() {
 
         {/* お知らせ（折りたたみ） */}
         {notices.length > 0 && (
-          <section className={`notices collapsible ${noticesOpen ? "active" : ""}`}>
+          <section className="notices collapsible">
             <div className="collapsible-header" onClick={() => setNoticesOpen((v) => !v)}>
               <span>📢 お知らせ</span>
-              <span className="collapsible-icon">▼</span>
+              <span className="collapsible-icon" style={{ transform: noticesOpen ? "rotate(180deg)" : "none", transition: "transform 0.3s ease" }}>▼</span>
             </div>
-            <div className="collapsible-content">
+            <div className="collapsible-content" style={{ gridTemplateRows: noticesOpen ? "1fr" : "0fr" }}>
               <div className="collapsible-content-inner">
               {notices.map((n) => (
                 <div
