@@ -104,10 +104,11 @@ a { color: var(--primary-color); }
 .collapsible-content {
   display: grid;
   grid-template-rows: 0fr;
+  overflow: hidden;
   transition: grid-template-rows 0.3s ease;
 }
 .collapsible.active .collapsible-content { grid-template-rows: 1fr; }
-.collapsible-content-inner { overflow: hidden; min-height: 0; }
+.collapsible-content-inner { min-height: 0; }
 
 /* ===================================
    検索エリア
