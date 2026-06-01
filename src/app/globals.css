@@ -101,12 +101,13 @@ a { color: var(--primary-color); }
 .collapsible-header:hover { background-color: #0052a3; }
 .collapsible-icon { transition: transform 0.3s ease; }
 .collapsible.active .collapsible-icon { transform: rotate(180deg); }
-.collapsible-content {
-  display: grid;
-  overflow: hidden;
-  transition: grid-template-rows 0.3s ease;
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.collapsible-content-inner { min-height: 0; }
+.collapsible-content-inner {
+  animation: slideDown 0.25s ease;
+}
 
 /* ===================================
    検索エリア

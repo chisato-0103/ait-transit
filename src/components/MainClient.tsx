@@ -272,7 +272,7 @@ export default function MainClient() {
             <span>📍 ルート検索</span>
             <span className="collapsible-icon" style={{ transform: searchOpen ? "rotate(180deg)" : "none", transition: "transform 0.3s ease" }}>▼</span>
           </div>
-          <div className="collapsible-content" style={{ gridTemplateRows: searchOpen ? "1fr" : "0fr", overflow: "hidden" }}>
+          {searchOpen && (
             <div className="collapsible-content-inner">
             <form className="search-form" onSubmit={handleSearch}>
               <div className="form-group">
@@ -321,7 +321,7 @@ export default function MainClient() {
               <button type="submit" className="btn btn-primary">検索</button>
             </form>
             </div>
-          </div>
+          )}
         </section>
 
         {/* 次の便 */}
@@ -366,7 +366,7 @@ export default function MainClient() {
               <span>📢 お知らせ</span>
               <span className="collapsible-icon" style={{ transform: noticesOpen ? "rotate(180deg)" : "none", transition: "transform 0.3s ease" }}>▼</span>
             </div>
-            <div className="collapsible-content" style={{ gridTemplateRows: noticesOpen ? "1fr" : "0fr", overflow: "hidden" }}>
+            {noticesOpen && (
               <div className="collapsible-content-inner">
               {notices.map((n) => (
                 <div
@@ -379,7 +379,7 @@ export default function MainClient() {
                 </div>
               ))}
               </div>
-            </div>
+            )}
           </section>
         )}
       </div>
