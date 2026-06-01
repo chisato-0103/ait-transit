@@ -23,11 +23,11 @@ export async function GET(req: NextRequest) {
   const testDate = searchParams.get("test_date");
   const testTime = searchParams.get("test_time");
 
-  // 現在時刻（JST）
-  const nowJST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+  // 現在時刻（JST = UTC+9）
+  const nowJST = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const currentTime =
     testTime ??
-    `${String(nowJST.getHours()).padStart(2, "0")}:${String(nowJST.getMinutes()).padStart(2, "0")}:${String(nowJST.getSeconds()).padStart(2, "0")}`;
+    `${String(nowJST.getUTCHours()).padStart(2, "0")}:${String(nowJST.getUTCMinutes()).padStart(2, "0")}:${String(nowJST.getUTCSeconds()).padStart(2, "0")}`;
   const dateStr = testDate ?? getTodayStr();
 
   const diaType = getDiaType(dateStr);

@@ -171,11 +171,13 @@ export function getDayType(dateStr: string): DayType {
   return diaType === "A" ? "weekday_green" : "holiday_red";
 }
 
+function nowJST(): Date {
+  return new Date(Date.now() + 9 * 60 * 60 * 1000);
+}
+
 export function getTodayStr(): string {
-  const now = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  );
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const d = nowJST();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
 export function getTomorrowStr(dateStr: string): string {
