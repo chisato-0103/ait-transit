@@ -449,16 +449,19 @@ function NextDeparture({
     if (isYakusaDest) {
       routeInfo = (
         <>
-          <Image src="/school.svg" alt="大学" width={28} height={18} /> 愛知工業大学 →{" "}
-          <Image src="/bus.svg" alt="バス" width={28} height={18} /> 八草駅
+          <span className="ri-seg"><Image src="/school.svg" alt="" width={22} height={14} />愛知工業大学</span>
+          <span className="ri-arrow">→</span>
+          <span className="ri-seg"><Image src="/bus.svg" alt="" width={22} height={14} />八草駅</span>
         </>
       );
     } else {
       routeInfo = (
         <>
-          <Image src="/school.svg" alt="大学" width={28} height={18} /> 愛知工業大学 →{" "}
-          <Image src="/bus.svg" alt="バス" width={28} height={18} /> 八草駅 →{" "}
-          <Image src="/train.svg" alt="電車" width={28} height={18} /> {route.destination_name}
+          <span className="ri-seg"><Image src="/school.svg" alt="" width={22} height={14} />愛知工業大学</span>
+          <span className="ri-arrow">→</span>
+          <span className="ri-seg"><Image src="/bus.svg" alt="" width={22} height={14} />八草駅</span>
+          <span className="ri-arrow">→</span>
+          <span className="ri-seg"><Image src="/train.svg" alt="" width={22} height={14} />{route.destination_name}</span>
         </>
       );
     }
@@ -467,8 +470,9 @@ function NextDeparture({
     title = "次に乗るシャトルバス";
     routeInfo = (
       <>
-        <Image src="/bus.svg" alt="バス" width={28} height={18} /> 八草駅 →{" "}
-        <Image src="/school.svg" alt="大学" width={28} height={18} /> 愛知工業大学
+        <span className="ri-seg"><Image src="/bus.svg" alt="" width={22} height={14} />八草駅</span>
+        <span className="ri-arrow">→</span>
+        <span className="ri-seg"><Image src="/school.svg" alt="" width={22} height={14} />愛知工業大学</span>
       </>
     );
   } else {
@@ -476,9 +480,11 @@ function NextDeparture({
     title = `次の${railName}は`;
     routeInfo = (
       <>
-        <Image src="/train.svg" alt="電車" width={28} height={18} /> {route.origin_name} →{" "}
-        <Image src="/bus.svg" alt="バス" width={28} height={18} /> 八草駅 →{" "}
-        <Image src="/school.svg" alt="大学" width={28} height={18} /> 愛知工業大学
+        <span className="ri-seg"><Image src="/train.svg" alt="" width={22} height={14} />{route.origin_name}</span>
+        <span className="ri-arrow">→</span>
+        <span className="ri-seg"><Image src="/bus.svg" alt="" width={22} height={14} />八草駅</span>
+        <span className="ri-arrow">→</span>
+        <span className="ri-seg"><Image src="/school.svg" alt="" width={22} height={14} />愛知工業大学</span>
       </>
     );
   }

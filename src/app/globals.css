@@ -181,8 +181,18 @@ a { color: var(--primary-color); }
   margin: 0.5rem 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
-.next-departure-info { font-size: 1.1rem; text-align: center; margin-top: 0.5rem; }
-.next-departure-info img { width: 28px; height: 18px; vertical-align: middle; }
+.next-departure-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem 0.4rem;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+.next-departure-info img { width: 22px; height: 14px; flex-shrink: 0; }
+.ri-seg { display: inline-flex; align-items: center; gap: 0.2rem; white-space: nowrap; }
+.ri-arrow { opacity: 0.8; }
 
 .countdown {
   background-color: rgba(255, 255, 255, 0.2);
@@ -400,9 +410,17 @@ a { color: var(--primary-color); }
 /* ===================================
    レスポンシブ
    =================================== */
-@media (max-width: 768px) {
-  .current-time-wrapper { padding: 0.9rem 1.2rem; gap: 0.6rem; }
+@media (max-width: 480px) {
+  .container { padding: 0.75rem; }
   .current-time { font-size: 1.3rem; }
+  .current-time-wrapper { padding: 0.9rem 1rem; gap: 0.5rem; }
+  .next-departure { padding: 1.2rem 1rem; }
+  .next-departure-time { font-size: 2.5rem; }
+  .alert-banner { padding: 10px 12px; font-size: 0.9rem; }
+  .route-card-compact { padding: 0.85rem; }
+  .segment-label { flex: 1 1 calc(50% - 0.4rem); }
+  .results { margin-bottom: 0.75rem; }
+  .footer { padding: 1.5rem 0.75rem; font-size: 0.85rem; }
 }
 @media (min-width: 768px) {
   .header h1 { font-size: 2rem; }
