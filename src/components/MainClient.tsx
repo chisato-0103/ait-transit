@@ -273,6 +273,7 @@ export default function MainClient() {
             <span className="collapsible-icon">▼</span>
           </div>
           <div className="collapsible-content">
+            <div className="collapsible-content-inner">
             <form className="search-form" onSubmit={handleSearch}>
               <div className="form-group">
                 <label>路線と方向を選択</label>
@@ -319,6 +320,7 @@ export default function MainClient() {
 
               <button type="submit" className="btn btn-primary">検索</button>
             </form>
+            </div>
           </div>
         </section>
 
@@ -365,6 +367,7 @@ export default function MainClient() {
               <span className="collapsible-icon">▼</span>
             </div>
             <div className="collapsible-content">
+              <div className="collapsible-content-inner">
               {notices.map((n) => (
                 <div
                   key={n.id}
@@ -375,6 +378,7 @@ export default function MainClient() {
                   <div className="notice-content">{n.body}</div>
                 </div>
               ))}
+              </div>
             </div>
           </section>
         )}
