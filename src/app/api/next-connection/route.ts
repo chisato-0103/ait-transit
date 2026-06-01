@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     success: true,
     data: {
+      _debug: { utc: new Date().toISOString(), date_str: dateStr, current_time: currentTime, dia_type: diaType, routes_count: routes.length },
       current_time: currentTime,
       dia_type: diaType,
       dia_description: DIA_TYPE_DESCRIPTIONS[diaType] ?? `ダイヤ${diaType}`,
