@@ -107,7 +107,7 @@ a { color: var(--primary-color); }
   transition: grid-template-rows 0.3s ease;
 }
 .collapsible.active .collapsible-content { grid-template-rows: 1fr; }
-.collapsible-content-inner { overflow: hidden; }
+.collapsible-content-inner { overflow: hidden; min-height: 0; }
 
 /* ===================================
    検索エリア
