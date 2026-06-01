@@ -158,6 +158,8 @@ a { color: var(--primary-color); }
 .radio-option input[type="radio"] { margin-right: 12px; cursor: pointer; width: 18px; height: 18px; accent-color: var(--primary-color); }
 .radio-option input[type="radio"]:checked + span { font-weight: 600; color: var(--primary-color); }
 .radio-option span { flex: 1; font-size: 0.95rem; color: var(--text-color); }
+.radio-label { display: inline-flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+.radio-label img { width: 20px; height: 13px; }
 
 /* ===================================
    次の便 - 大型表示

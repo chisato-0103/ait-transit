@@ -278,11 +278,11 @@ export default function MainClient() {
                 <label>路線と方向を選択</label>
                 <div className="route-selection">
                   {([
-                    ["to_linimo", "🏫 大学 → 🚃 リニモ駅"],
-                    ["from_linimo", "🚃 リニモ駅 → 🏫 大学"],
-                    ["to_aichi_kanjo", "🏫 大学 → 🚆 愛知環状線駅"],
-                    ["from_aichi_kanjo", "🚆 愛知環状線駅 → 🏫 大学"],
-                  ] as [RouteOption, string][]).map(([val, label]) => (
+                    ["to_linimo",       <><Image src="/school-dark.svg" alt="" width={20} height={13} /> 大学 → <Image src="/train-dark.svg" alt="" width={20} height={13} /> リニモ駅</> ],
+                    ["from_linimo",     <><Image src="/train-dark.svg"  alt="" width={20} height={13} /> リニモ駅 → <Image src="/school-dark.svg" alt="" width={20} height={13} /> 大学</> ],
+                    ["to_aichi_kanjo",  <><Image src="/school-dark.svg" alt="" width={20} height={13} /> 大学 → <Image src="/train-dark.svg"  alt="" width={20} height={13} /> 愛知環状線駅</> ],
+                    ["from_aichi_kanjo",<><Image src="/train-dark.svg"  alt="" width={20} height={13} /> 愛知環状線駅 → <Image src="/school-dark.svg" alt="" width={20} height={13} /> 大学</> ],
+                  ] as [RouteOption, React.ReactNode][]).map(([val, label]) => (
                     <label key={val} className="radio-option">
                       <input
                         type="radio"
@@ -291,7 +291,7 @@ export default function MainClient() {
                         checked={routeOption === val}
                         onChange={() => setRouteOption(val)}
                       />
-                      <span>{label}</span>
+                      <span className="radio-label">{label}</span>
                     </label>
                   ))}
                 </div>
@@ -672,6 +672,9 @@ function RouteSteps({
   const railName = lineCode === "aichi_kanjo" ? "電車" : "リニモ";
   const arrowColor = isDark ? "white" : undefined;
   const stepsColor = isDark ? "white" : undefined;
+  const busIcon = isDark ? "/bus.svg" : "/bus-dark.svg";
+  const schoolIcon = isDark ? "/school.svg" : "/school-dark.svg";
+  const trainIcon = isDark ? "/train.svg" : "/train-dark.svg";
 
   const linimoOpts = route.linimo_options ?? [];
   const shuttleOpts = route.shuttle_options ?? [];
@@ -681,7 +684,7 @@ function RouteSteps({
       <div className="route-steps" style={{ color: stepsColor }}>
         {/* 大学 発 */}
         <div className="route-step">
-          <Image src="/school.svg" alt="大学" width={50} height={30} />
+          <Image src={schoolIcon} alt="大学" width={50} height={30} />
           <div className="route-step-content">
             <div className="route-step-time">愛知工業大学 発 {fmt(route.shuttle_departure)}</div>
             <div className="route-step-detail">シャトルバスで出発</div>
@@ -692,7 +695,7 @@ function RouteSteps({
           <>
             <div className="route-arrow" style={{ color: arrowColor }}>↓</div>
             <div className="route-step">
-              <Image src="/bus.svg" alt="バス" width={50} height={30} />
+              <Image src={busIcon} alt="バス" width={50} height={30} />
               <div className="route-step-content">
                 <div className="route-step-time">八草駅 着 {fmt(route.shuttle_arrival)}</div>
                 <div className="route-step-detail">到着</div>
@@ -703,7 +706,7 @@ function RouteSteps({
           <>
             <div className="route-arrow" style={{ color: arrowColor }}>↓</div>
             <div className="route-step">
-              <Image src="/bus.svg" alt="バス" width={50} height={30} />
+              <Image src={busIcon} alt="バス" width={50} height={30} />
               <div className="route-step-content">
                 <div className="route-step-time">八草駅 着 {fmt(route.shuttle_arrival)}</div>
                 <div className="route-step-detail">シャトルバス約5分</div>
@@ -714,7 +717,7 @@ function RouteSteps({
               <>
                 <div className="route-arrow" style={{ color: arrowColor }}>↓</div>
                 <div className="route-step">
-                  <Image src="/train.svg" alt="時計" width={50} height={30} />
+                  <Image src={trainIcon} alt="時計" width={50} height={30} />
                   <div className="route-step-content">
                     <div className="route-step-time">乗り換え時間: {linimoOpts[selectedLinimo]?.transfer_time ?? route.transfer_time}分</div>
                     <div className="route-step-detail">{railName}へ乗り換え</div>
@@ -751,7 +754,7 @@ function RouteSteps({
 
                 <div className="route-arrow" style={{ color: arrowColor }}>↓</div>
                 <div className="route-step">
-                  <Image src="/bus.svg" alt="到着" width={50} height={30} />
+                  <Image src={busIcon} alt="到着" width={50} height={30} />
                   <div className="route-step-content">
                     <div className="route-step-time">{route.destination_name} 着 {effectiveDestArrival}</div>
                     <div className="route-step-detail">到着</div>
@@ -770,7 +773,7 @@ function RouteSteps({
     return (
       <div className="route-steps" style={{ color: stepsColor }}>
         <div className="route-step">
-          <Image src="/bus.svg" alt="バス" width={50} height={30} />
+          <Image src={busIcon} alt="バス" width={50} height={30} />
           <div className="route-step-content">
             <div className="route-step-time">八草駅 発 {fmt(route.shuttle_departure)}</div>
             <div className="route-step-detail">シャトルバスで出発</div>
@@ -778,7 +781,7 @@ function RouteSteps({
         </div>
         <div className="route-arrow" style={{ color: arrowColor }}>↓</div>
         <div className="route-step">
-          <Image src="/school.svg" alt="大学" width={50} height={30} />
+          <Image src={schoolIcon} alt="大学" width={50} height={30} />
           <div className="route-step-content">
             <div className="route-step-time">愛知工業大学 着 {fmt(route.shuttle_arrival)}</div>
             <div className="route-step-detail">到着</div>
@@ -791,7 +794,7 @@ function RouteSteps({
   return (
     <div className="route-steps" style={{ color: stepsColor }}>
       <div className="route-step">
-        <Image src="/train.svg" alt="電車" width={50} height={30} />
+        <Image src={trainIcon} alt="電車" width={50} height={30} />
         <div className="route-step-content">
           <div className="route-step-time">{route.origin_name} 発 {fmt(route.linimo_departure)}</div>
           <div className="route-step-detail">{railName}で出発</div>
@@ -799,7 +802,7 @@ function RouteSteps({
       </div>
       <div className="route-arrow" style={{ color: arrowColor }}>↓</div>
       <div className="route-step">
-        <Image src="/bus.svg" alt="バス" width={50} height={30} />
+        <Image src={busIcon} alt="バス" width={50} height={30} />
         <div className="route-step-content">
           <div className="route-step-time">八草駅 着 {fmt(route.linimo_arrival)}</div>
           <div className="route-step-detail">{railName}約{route.linimo_time}分</div>
@@ -810,7 +813,7 @@ function RouteSteps({
         <>
           <div className="route-arrow" style={{ color: arrowColor }}>↓</div>
           <div className="route-step">
-            <Image src="/train.svg" alt="時計" width={50} height={30} />
+            <Image src={trainIcon} alt="時計" width={50} height={30} />
             <div className="route-step-content">
               <div className="route-step-time">乗り換え時間: {shuttleOpts[selectedShuttle]?.transfer_time ?? route.transfer_time}分</div>
               <div className="route-step-detail">シャトルバスへ乗り換え</div>
@@ -847,7 +850,7 @@ function RouteSteps({
 
           <div className="route-arrow" style={{ color: arrowColor }}>↓</div>
           <div className="route-step">
-            <Image src="/school.svg" alt="大学" width={50} height={30} />
+            <Image src={schoolIcon} alt="大学" width={50} height={30} />
             <div className="route-step-content">
               <div className="route-step-time">愛知工業大学 着 {effectiveShuttleArrival}</div>
               <div className="route-step-detail">到着</div>
