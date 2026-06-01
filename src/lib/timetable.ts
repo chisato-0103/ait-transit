@@ -101,7 +101,7 @@ export interface ServiceInfo {
 // 定数
 // ============================================================
 
-export const TRANSFER_TIME_MINUTES = 10;
+export const TRANSFER_TIME_MINUTES = 5;
 export const RESULT_LIMIT = 3;
 export const DEFAULT_DESTINATION = "fujigaoka";
 
