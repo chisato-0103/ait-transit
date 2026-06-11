@@ -430,26 +430,12 @@ export function calculateStationToUniversity(
   }
 
   const linimoTravelTime = originInfo.travel_time_from_yakusa;
-  let linimoTrains = getNextLinimoTrains(originCode, "to_yagusa", currentTime, dayType, 30);
-  const useReverse = linimoTrains.length === 0;
-  if (useReverse) {
-    // 藤が丘などの終端駅は to_yagusa データなし → 八草の到着時刻 (to_yagusa) から逆算
-    linimoTrains = getNextLinimoTrains("yakusa", "to_yagusa", currentTime, dayType, 30);
-  }
+  const linimoTrains = getNextLinimoTrains(originCode, "to_yagusa", currentTime, dayType, 30);
 
   const routes: RouteResult[] = [];
   for (const linimo of linimoTrains) {
-    let originDeparture: string;
-    let yagusaArrival: string;
-
-    if (useReverse) {
-      originDeparture = addMinutes(linimo.departure_time, -linimoTravelTime);
-      if (timeToMinutes(originDeparture) < timeToMinutes(currentTime)) continue;
-      yagusaArrival = addMinutes(linimo.departure_time, 2);
-    } else {
-      originDeparture = linimo.departure_time;
-      yagusaArrival = addMinutes(originDeparture, linimoTravelTime);
-    }
+    const originDeparture = linimo.departure_time;
+    const yagusaArrival = addMinutes(originDeparture, linimoTravelTime);
 
     const minShuttleTime = addMinutes(yagusaArrival, TRANSFER_TIME_MINUTES);
     const shuttles = getNextShuttleBuses("to_university", minShuttleTime, diaType, 3);
