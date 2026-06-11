@@ -352,8 +352,7 @@ export function calculateUniversityToStation(
   for (const shuttle of shuttles) {
     const yagusaArrival = shuttle.arrival_time;
     const minLinimoTime = addMinutes(yagusaArrival, TRANSFER_TIME_MINUTES);
-    // 八草駅のデータは折り返し到着時刻として to_yagusa で記録されている
-    const linimoOpts3 = getNextLinimoTrains("yakusa", "to_yagusa", minLinimoTime, dayType, 3);
+    const linimoOpts3 = getNextLinimoTrains("yakusa", "to_fujigaoka", minLinimoTime, dayType, 3);
     if (!linimoOpts3.length) continue;
 
     const linimo = linimoOpts3[0];
