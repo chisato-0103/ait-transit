@@ -64,4 +64,9 @@
 3. ✅ 愛知環状鉄道のJSON生成（aichi_kanjo_timetable.json 2942件、
    ルート計算実装済み）
 4. ✅ Vercelデプロイ（push時に自動デプロイで運用中）
+5. 愛環の土休日ダイヤ対応 ← 次はここ（正確性リスク・最優先）
+   現状aichi_kanjo_timetable.jsonは平日のみ2942件で、
+   timetable.ts側もweekday_green固定。土休日に平日時刻を
+   表示してしまっている。公式(aikanrailway.co.jp)から
+   土休日データを取得して追加し、フィルタをdayType連動にする
 完了したらこのロードマップを更新すること
