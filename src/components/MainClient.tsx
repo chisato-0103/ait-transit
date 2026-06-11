@@ -336,7 +336,10 @@ export default function MainClient() {
           <div className="current-time-label">⏰ 現在時刻</div>
           <div className="current-time">{currentTime || "読み込み中..."}</div>
           {apiData?.last_shuttle && (
-            <div className="last-bus-chip">🚌 本日の終バス（{apiData.last_shuttle_label}） {apiData.last_shuttle}</div>
+            <div className="last-bus-chip">
+              <Image src="/bus.svg" alt="" width={18} height={12} style={{ verticalAlign: "-1px", marginRight: "4px" }} />
+              本日の終バス（{apiData.last_shuttle_label}） {apiData.last_shuttle}
+            </div>
           )}
         </div>
 
