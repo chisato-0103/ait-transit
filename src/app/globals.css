@@ -375,6 +375,19 @@ a { color: var(--primary-color); }
 .notice-content { font-size: 0.9rem; color: #666; }
 
 /* ===================================
+   臨時シャトルバス案内
+   =================================== */
+.extra-shuttle-notice {
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--warning-color);
+  background-color: #fff8e6;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #665200;
+}
+
+/* ===================================
    運行なし表示
    =================================== */
 .no-service-card {

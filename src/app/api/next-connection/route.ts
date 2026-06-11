@@ -8,6 +8,7 @@ import {
   calculateStationToUniversity,
   calculateYagusaToUniversity,
   buildServiceInfo,
+  isExtraShuttleWindow,
   DIA_TYPE_DESCRIPTIONS,
   DAY_TYPE_DESCRIPTIONS,
   RESULT_LIMIT,
@@ -77,6 +78,7 @@ export async function GET(req: NextRequest) {
       to_name: toName,
       routes,
       service_info: serviceInfo,
+      extra_shuttle_notice: isExtraShuttleWindow(diaType, currentTime),
     },
   });
 }

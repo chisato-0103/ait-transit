@@ -80,6 +80,7 @@ interface ApiData {
   to_name: string;
   routes: RouteResult[];
   service_info: ServiceInfo | null;
+  extra_shuttle_notice?: boolean;
 }
 
 type RouteOption = "to_linimo" | "from_linimo" | "to_aichi_kanjo" | "from_aichi_kanjo";
@@ -357,6 +358,13 @@ export default function MainClient() {
         ) : apiData && apiData.service_info ? (
           <NoServiceCard info={apiData.service_info} diaDescription={apiData.dia_description} />
         ) : null}
+
+        {/* 臨時シャトルバス案内（A・Bダイヤ 7:55〜10:45） */}
+        {apiData?.extra_shuttle_notice && (
+          <div className="extra-shuttle-notice">
+            🚌 この時間帯（7:55〜10:45）は上記時刻表のほかに臨時シャトルバスも往復運行しています
+          </div>
+        )}
 
         {/* お知らせ（折りたたみ） */}
         {notices.length > 0 && (

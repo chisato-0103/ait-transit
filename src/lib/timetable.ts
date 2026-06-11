@@ -490,6 +490,14 @@ export function calculateYagusaToUniversity(
   }));
 }
 
+// A・Bダイヤは7:55〜10:45に時刻表掲載外の臨時シャトルバスが往復運行
+// （公式PDF access_yakusa_time_20260401.pdf 注記※2。時刻は非公表のため表示対象外）
+export function isExtraShuttleWindow(diaType: DiaType, currentTime: string): boolean {
+  if (diaType !== "A" && diaType !== "B") return false;
+  const now = timeToMinutes(currentTime);
+  return now >= timeToMinutes("7:55") && now <= timeToMinutes("10:45");
+}
+
 export function buildServiceInfo(
   direction: Direction,
   diaType: DiaType,
