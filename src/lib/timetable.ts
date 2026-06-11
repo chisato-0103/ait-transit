@@ -238,15 +238,49 @@ export function getAichiKanjoDirectionToYakusa(stationCode: string): AichiKanjoD
   return KOZOJI_SIDE_STATIONS.has(stationCode) ? "to_okazaki" : "to_kozoji";
 }
 
+// 愛知環状鉄道の駅順（岡崎0 → 高蔵寺22）。行先による到達可否判定に使う
+const AIKAN_STATION_ORDER = [
+  "okazaki", "mutsuna", "nakaokazaki", "kitaokazaki", "daimon", "kitanomasuduka",
+  "mikawakamigo", "ekaku", "suenohara", "mikawatoyota", "shinuwagoromo", "shintoyota",
+  "aikanumetubo", "shigo", "kaizu", "homi", "sasabara", "yakusa", "yamaguchi",
+  "setoguchi", "setoshi", "nakamizuno", "kozoji",
+];
+const AIKAN_TERMINAL_CODE: Record<string, string> = {
+  岡崎: "okazaki",
+  高蔵寺: "kozoji",
+  北野桝塚: "kitanomasuduka",
+  新豊田: "shintoyota",
+  瀬戸口: "setoguchi",
+};
+
+// 行先が目的駅より手前止まりの便（例: 岡崎方面の北野桝塚行き）を除外する
+function aikanTrainReaches(entry: AichiKanjoEntry, targetCode: string): boolean {
+  const termCode = AIKAN_TERMINAL_CODE[entry.terminal];
+  const ti = termCode ? AIKAN_STATION_ORDER.indexOf(termCode) : -1;
+  const si = AIKAN_STATION_ORDER.indexOf(targetCode);
+  if (ti < 0 || si < 0) return true;
+  return entry.direction === "to_okazaki" ? ti <= si : ti >= si;
+}
+
 export function getNextAichiKanjoTrains(
   stationCode: string,
   direction: AichiKanjoDirection,
   currentTime: string,
-  limit = 5
+  dayType: DayType,
+  limit = 5,
+  targetCode?: string
 ): AichiKanjoEntry[] {
+  const normalized = CODE_MAP[stationCode] ?? stationCode;
   const searchTime = currentTime.length === 5 ? currentTime + ":00" : currentTime;
   return (aichiKanjoTimetableRaw as AichiKanjoEntry[])
-    .filter((r) => r.station_code === stationCode && r.direction === direction && r.day_type === "weekday_green" && timeGte(r.departure_time, searchTime))
+    .filter(
+      (r) =>
+        r.station_code === normalized &&
+        r.direction === direction &&
+        r.day_type === dayType &&
+        timeGte(r.departure_time, searchTime) &&
+        (!targetCode || aikanTrainReaches(r, targetCode))
+    )
     .sort((a, b) => timeToMinutes(a.departure_time) - timeToMinutes(b.departure_time))
     .slice(0, limit);
 }
@@ -314,7 +348,7 @@ export function calculateUniversityToStation(
     for (const shuttle of shuttles) {
       const yagusaArrival = shuttle.arrival_time;
       const minTrainTime = addMinutes(yagusaArrival, TRANSFER_TIME_MINUTES);
-      const trainOpts = getNextAichiKanjoTrains("yakusa", dirFromYakusa, minTrainTime, 3);
+      const trainOpts = getNextAichiKanjoTrains("yakusa", dirFromYakusa, minTrainTime, dayType, 3, dest.station_code);
       if (!trainOpts.length) continue;
 
       const train = trainOpts[0];
@@ -396,7 +430,7 @@ export function calculateStationToUniversity(
   if (originInfo.line_type === "aichi_kanjo") {
     const dirToYakusa = getAichiKanjoDirectionToYakusa(originCode);
     const travelTime = originInfo.travel_time_from_yakusa;
-    const trains = getNextAichiKanjoTrains(originCode, dirToYakusa, currentTime, 30);
+    const trains = getNextAichiKanjoTrains(originCode, dirToYakusa, currentTime, dayType, 30, "yakusa");
     const routes: RouteResult[] = [];
 
     for (const train of trains) {
