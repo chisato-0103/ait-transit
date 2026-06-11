@@ -85,6 +85,9 @@ interface ApiData {
 
 type RouteOption = "to_linimo" | "from_linimo" | "to_aichi_kanjo" | "from_aichi_kanjo";
 
+// 前回の検索条件（路線と駅）の保存キー。方向は開いた時間帯から自動決定する
+const LAST_SEARCH_KEY = "ait-transit:last-search";
+
 // ============================================================
 // ユーティリティ
 // ============================================================
@@ -169,6 +172,41 @@ export default function MainClient() {
       });
   }, []);
 
+  // 前回の検索条件＋時間帯で初期化（午前=大学行き / 午後=帰宅方向）。
+  // URLパラメータがある場合は後続のeffectが上書きする
+  useEffect(() => {
+    if (searchParams.get("direction") || searchParams.get("destination") || searchParams.get("origin")) return;
+    let saved: { line?: string; station?: string } = {};
+    try {
+      saved = JSON.parse(localStorage.getItem(LAST_SEARCH_KEY) ?? "{}");
+    } catch {
+      // 保存データ破損時はデフォルトのまま
+    }
+    const line = saved.line === "aichi_kanjo" ? "aichi_kanjo" : "linimo";
+    const morning = new Date().getHours() < 12;
+    setRouteOption(
+      line === "linimo"
+        ? (morning ? "from_linimo" : "to_linimo")
+        : (morning ? "from_aichi_kanjo" : "to_aichi_kanjo")
+    );
+    if (saved.station) {
+      setDestination(saved.station);
+      setOrigin(saved.station);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 検索条件が変わったら保存（次回起動時の初期値になる）
+  useEffect(() => {
+    const line = routeOption.includes("aichi") ? "aichi_kanjo" : "linimo";
+    const isToSt = routeOption === "to_linimo" || routeOption === "to_aichi_kanjo";
+    try {
+      localStorage.setItem(LAST_SEARCH_KEY, JSON.stringify({ line, station: isToSt ? destination : origin }));
+    } catch {
+      // プライベートモード等で保存できなくても動作に支障なし
+    }
+  }, [routeOption, destination, origin]);
+
   // URLパラメータから初期値
   useEffect(() => {
     const dir = searchParams.get("direction");
@@ -208,11 +246,6 @@ export default function MainClient() {
     const id = setInterval(fetchRoutes, 30000);
     return () => clearInterval(id);
   }, [fetchRoutes]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchRoutes();
-  };
 
   const isToStation = routeOption === "to_linimo" || routeOption === "to_aichi_kanjo";
   const isLinimo = routeOption === "to_linimo" || routeOption === "from_linimo";
@@ -274,7 +307,7 @@ export default function MainClient() {
           </div>
           {searchOpen && (
             <div className="collapsible-content-inner">
-            <form className="search-form" onSubmit={handleSearch}>
+            <div className="search-form">
               <div className="form-group">
                 <label>路線と方向を選択</label>
                 <div className="route-selection">
@@ -318,8 +351,7 @@ export default function MainClient() {
                 </div>
               )}
 
-              <button type="submit" className="btn btn-primary">検索</button>
-            </form>
+            </div>
             </div>
           )}
         </section>
