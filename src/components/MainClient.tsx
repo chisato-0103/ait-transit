@@ -81,6 +81,8 @@ interface ApiData {
   routes: RouteResult[];
   service_info: ServiceInfo | null;
   extra_shuttle_notice?: boolean;
+  last_shuttle?: string | null;
+  last_shuttle_label?: string;
 }
 
 type RouteOption = "to_linimo" | "from_linimo" | "to_aichi_kanjo" | "from_aichi_kanjo";
@@ -138,6 +140,19 @@ export default function MainClient() {
   const [destination, setDestination] = useState("fujigaoka");
   const [origin, setOrigin] = useState("fujigaoka");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [disclaimerOpen, setDisclaimerOpen] = useState(false);
+
+  // 非公式警告は初回訪問時のみ全文表示し、以降は1行に畳む
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("ait-transit:disclaimer-seen")) {
+        setDisclaimerOpen(true);
+        localStorage.setItem("ait-transit:disclaimer-seen", "1");
+      }
+    } catch {
+      setDisclaimerOpen(true);
+    }
+  }, []);
   const [noticesOpen, setNoticesOpen] = useState(false);
   const [nextDepExpanded, setNextDepExpanded] = useState(false);
 
@@ -274,6 +289,18 @@ export default function MainClient() {
     }
   }
 
+  // 出発時刻を過ぎたら自動で次の便に切り替える（30秒ポーリングを待たない）
+  useEffect(() => {
+    if (!countdownTime) return;
+    const [h, m] = countdownTime.split(":").map(Number);
+    const dep = new Date();
+    dep.setHours(h, m, 0, 0);
+    const delay = dep.getTime() - Date.now() + 3000;
+    if (delay <= 0 || delay > 60 * 60 * 1000) return;
+    const id = setTimeout(fetchRoutes, delay);
+    return () => clearTimeout(id);
+  }, [countdownTime, fetchRoutes]);
+
   return (
     <div>
       <header className="header">
@@ -282,21 +309,26 @@ export default function MainClient() {
       </header>
 
       <div className="container">
-        {/* 非公式警告 */}
-        <div className="alert-banner">
-          <strong>⚠️ 重要：本システムは非公式です</strong>
-          <p>
-            このシステムは愛知工業大学の学生による非公式サービスです。
-            実際にご利用になられる際は、必ず
-            <a href="https://www.linimo.jp/" target="_blank" rel="noopener noreferrer">リニモ公式サイト</a>や
-            シャトルバスの公式情報でご確認ください。
-          </p>
+        {/* 非公式警告（初回のみ全文、以降は1行） */}
+        <div className="alert-banner" onClick={() => setDisclaimerOpen((v) => !v)} style={{ cursor: "pointer" }}>
+          <strong>⚠️ 本システムは非公式です{!disclaimerOpen && "（タップで詳細）"}</strong>
+          {disclaimerOpen && (
+            <p>
+              このシステムは愛知工業大学の学生による非公式サービスです。
+              実際にご利用になられる際は、必ず
+              <a href="https://www.linimo.jp/" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>リニモ公式サイト</a>や
+              シャトルバスの公式情報でご確認ください。
+            </p>
+          )}
         </div>
 
         {/* 現在時刻 */}
         <div className="current-time-wrapper">
           <div className="current-time-label">⏰ 現在時刻</div>
           <div className="current-time">{currentTime || "読み込み中..."}</div>
+          {apiData?.last_shuttle && (
+            <div className="last-bus-chip">🚌 本日の終バス（{apiData.last_shuttle_label}） {apiData.last_shuttle}</div>
+          )}
         </div>
 
         {/* ルート検索（折りたたみ） */}

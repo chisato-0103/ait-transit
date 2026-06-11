@@ -8,6 +8,8 @@ import {
   calculateStationToUniversity,
   calculateYagusaToUniversity,
   buildServiceInfo,
+  getLastShuttleBus,
+  formatTime,
   isExtraShuttleWindow,
   DIA_TYPE_DESCRIPTIONS,
   DAY_TYPE_DESCRIPTIONS,
@@ -79,6 +81,11 @@ export async function GET(req: NextRequest) {
       routes,
       service_info: serviceInfo,
       extra_shuttle_notice: isExtraShuttleWindow(diaType, currentTime),
+      last_shuttle: (() => {
+        const last = getLastShuttleBus(direction === "to_station" ? "to_yagusa" : "to_university", diaType);
+        return last ? formatTime(last.departure_time) : null;
+      })(),
+      last_shuttle_label: direction === "to_station" ? "八草駅行き" : "大学行き",
     },
   });
 }
