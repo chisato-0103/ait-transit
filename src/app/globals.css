@@ -440,7 +440,8 @@ a { color: var(--primary-color); }
 @media (max-width: 480px) {
   .container { padding: 0.75rem; }
   .current-time { font-size: 1.3rem; }
-  .current-time-wrapper { padding: 0.9rem 1rem; gap: 0.5rem; }
+  .current-time-wrapper { padding: 0.9rem 1rem; gap: 0.5rem; flex-wrap: wrap; }
+  .last-bus-chip { flex-basis: 100%; text-align: center; margin-top: 0.25rem; }
   .next-departure { padding: 1.2rem 1rem; }
   .next-departure-time { font-size: 2.5rem; }
   .alert-banner { padding: 10px 12px; font-size: 0.9rem; }

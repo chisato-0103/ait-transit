@@ -156,9 +156,9 @@ export default function MainClient() {
   const [noticesOpen, setNoticesOpen] = useState(false);
   const [nextDepExpanded, setNextDepExpanded] = useState(false);
 
-  // PWA: Service Worker登録（オフライン時は最後に取得した結果を表示）
+  // PWA: Service Worker登録（本番のみ。devではHMRとキャッシュが衝突する）
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
+    if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {
         // 登録失敗してもアプリ動作には影響しない
       });
