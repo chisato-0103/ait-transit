@@ -1,0 +1,24 @@
+# push/PR時に型チェック・テスト・ビルドを実行する
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: 型チェック
+        run: npx tsc --noEmit
+      - name: テスト
+        run: npm test
+      - name: ビルド
+        run: npm run build
