@@ -11,6 +11,9 @@ interface Notice {
 }
 
 export async function GET() {
-  const notices = (noticesRaw as Notice[]).filter((n) => n.active);
+  // 新しい日付が上、同日なら後から追加したもの（id大）が上
+  const notices = (noticesRaw as Notice[])
+    .filter((n) => n.active)
+    .sort((a, b) => (a.date === b.date ? b.id - a.id : b.date.localeCompare(a.date)));
   return NextResponse.json({ success: true, data: notices });
 }
