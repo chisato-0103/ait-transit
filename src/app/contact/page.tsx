@@ -134,7 +134,7 @@ export default function ContactPage() {
                   フォームは現在準備中です。お手数ですが時間をおいてお試しください。
                 </p>
               )}
-              <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
+              <button type="submit" className="btn btn-primary" disabled={!canSubmit} style={{ marginTop: "0.75rem" }}>
                 {status === "sending" ? "送信中..." : "送信する"}
               </button>
             </form>
