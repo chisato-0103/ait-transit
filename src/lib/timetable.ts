@@ -342,7 +342,7 @@ export function calculateUniversityToStation(
   if (dest.line_type === "aichi_kanjo") {
     const dirFromYakusa = getAichiKanjoDirectionFromYakusa(destinationCode);
     const travelTime = dest.travel_time_from_yakusa;
-    const shuttles = getNextShuttleBuses("to_yagusa", currentTime, diaType, 10);
+    const shuttles = getNextShuttleBuses("to_yagusa", currentTime, diaType, Math.max(10, limit));
     const routes: RouteResult[] = [];
 
     for (const shuttle of shuttles) {
@@ -380,7 +380,7 @@ export function calculateUniversityToStation(
   }
 
   const linimoTravelTime = dest.travel_time_from_yakusa;
-  const shuttles = getNextShuttleBuses("to_yagusa", currentTime, diaType, 10);
+  const shuttles = getNextShuttleBuses("to_yagusa", currentTime, diaType, Math.max(10, limit));
   const routes: RouteResult[] = [];
 
   for (const shuttle of shuttles) {
@@ -430,7 +430,7 @@ export function calculateStationToUniversity(
   if (originInfo.line_type === "aichi_kanjo") {
     const dirToYakusa = getAichiKanjoDirectionToYakusa(originCode);
     const travelTime = originInfo.travel_time_from_yakusa;
-    const trains = getNextAichiKanjoTrains(originCode, dirToYakusa, currentTime, dayType, 30, "yakusa");
+    const trains = getNextAichiKanjoTrains(originCode, dirToYakusa, currentTime, dayType, Math.max(30, limit), "yakusa");
     const routes: RouteResult[] = [];
 
     for (const train of trains) {
@@ -464,7 +464,7 @@ export function calculateStationToUniversity(
   }
 
   const linimoTravelTime = originInfo.travel_time_from_yakusa;
-  const linimoTrains = getNextLinimoTrains(originCode, "to_yagusa", currentTime, dayType, 30);
+  const linimoTrains = getNextLinimoTrains(originCode, "to_yagusa", currentTime, dayType, Math.max(30, limit));
 
   const routes: RouteResult[] = [];
   for (const linimo of linimoTrains) {

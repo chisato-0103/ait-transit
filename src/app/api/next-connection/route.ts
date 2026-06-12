@@ -10,6 +10,8 @@ import {
   buildServiceInfo,
   getLastShuttleBus,
   formatTime,
+  addMinutes,
+  timeToMinutes,
   isExtraShuttleWindow,
   DIA_TYPE_DESCRIPTIONS,
   DAY_TYPE_DESCRIPTIONS,
@@ -25,6 +27,10 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") ?? String(RESULT_LIMIT), 10);
   const testDate = searchParams.get("test_date");
   const testTime = searchParams.get("test_time");
+  // arrival: test_time を「この時刻までに到着」の期限として逆算検索する
+  const searchMode = searchParams.get("search_mode") === "arrival" ? "arrival" : "departure";
+  // 到着基準のとき、何分前まで遡って候補を探すか
+  const ARRIVAL_WINDOW_MINUTES = 180;
 
   // 現在時刻（JST = UTC+9）
   const nowJST = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -43,22 +49,41 @@ export async function GET(req: NextRequest) {
   let toName = "";
   let routes: ReturnType<typeof calculateUniversityToStation> = [];
 
+  // 到着基準: 期限の3時間前を起点に順方向計算し、期限までに着く便を抽出
+  const searchBase = searchMode === "arrival" ? addMinutes(currentTime, -ARRIVAL_WINDOW_MINUTES) : currentTime;
+  const searchLimit = searchMode === "arrival" ? 40 : limit;
+
   if (direction === "to_station") {
     fromName = "愛知工業大学";
     if (lineCode === "linimo" || lineCode === "aichi_kanjo") {
-      routes = calculateUniversityToStation(destination, currentTime, diaType, dayType, limit);
+      routes = calculateUniversityToStation(destination, searchBase, diaType, dayType, searchLimit);
     }
     // toName from routes or station lookup
     toName = routes[0]?.destination_name ?? destination;
   } else {
     toName = "愛知工業大学";
     if (origin === "yakusa") {
-      routes = calculateYagusaToUniversity(currentTime, diaType, limit);
+      routes = calculateYagusaToUniversity(searchBase, diaType, searchLimit);
       fromName = "八草駅";
     } else {
-      routes = calculateStationToUniversity(origin, currentTime, diaType, dayType, limit);
+      routes = calculateStationToUniversity(origin, searchBase, diaType, dayType, searchLimit);
       fromName = routes[0]?.origin_name ?? origin;
     }
+  }
+
+  if (searchMode === "arrival") {
+    // 目的地到着時刻が期限以内の便だけ残し、出発が遅い順（=期限ギリギリの最終から）に並べる
+    const deadline = timeToMinutes(currentTime);
+    const windowStart = timeToMinutes(searchBase);
+    routes = routes
+      .filter((r) => {
+        const arr = direction === "to_station" ? r.destination_arrival : r.shuttle_arrival;
+        if (!arr) return false;
+        const a = timeToMinutes(arr);
+        return a <= deadline && a >= windowStart;
+      })
+      .slice(-limit)
+      .reverse();
   }
 
   let serviceInfo = null;

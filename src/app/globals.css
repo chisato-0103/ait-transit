@@ -377,6 +377,30 @@ a { color: var(--primary-color); }
 /* ===================================
    日時指定検索
    =================================== */
+.mode-segment {
+  display: flex;
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mode-segment-btn {
+  flex: 1;
+  padding: 0.5rem 0.25rem;
+  border: none;
+  background: #fff;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.mode-segment-btn + .mode-segment-btn {
+  border-left: 1px solid var(--primary-color);
+}
+.mode-segment-btn.active {
+  background: var(--primary-color);
+  color: #fff;
+  font-weight: bold;
+}
+
 .sim-datetime-row {
   display: flex;
   gap: 0.5rem;

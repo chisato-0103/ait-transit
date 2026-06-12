@@ -141,8 +141,8 @@ export default function MainClient() {
   const [origin, setOrigin] = useState("fujigaoka");
   const [searchOpen, setSearchOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(false);
-  // 日時指定検索（nullなら「今」基準のライブ表示）
-  const [simDateTime, setSimDateTime] = useState<{ date: string; time: string } | null>(null);
+  // 検索基準: now=現在時刻のライブ表示 / departure=指定日時に出発 / arrival=指定日時までに到着
+  const [searchMode, setSearchMode] = useState<"now" | "departure" | "arrival">("now");
   const [simDraft, setSimDraft] = useState(() => {
     const d = new Date();
     return {
@@ -266,9 +266,10 @@ export default function MainClient() {
     if (testDate) params.set("test_date", testDate);
     if (testTime) params.set("test_time", testTime);
     // 日時指定検索はURLのテストパラメータより優先
-    if (simDateTime) {
-      params.set("test_date", simDateTime.date);
-      params.set("test_time", `${simDateTime.time}:00`);
+    if (searchMode !== "now" && simDraft.date && simDraft.time) {
+      params.set("test_date", simDraft.date);
+      params.set("test_time", `${simDraft.time}:00`);
+      if (searchMode === "arrival") params.set("search_mode", "arrival");
     }
     try {
       const res = await fetch(`/api/next-connection?${params}`);
@@ -277,15 +278,15 @@ export default function MainClient() {
     } finally {
       setLoading(false);
     }
-  }, [routeOption, destination, origin, searchParams, simDateTime]);
+  }, [routeOption, destination, origin, searchParams, searchMode, simDraft]);
 
   useEffect(() => {
     fetchRoutes();
     // 日時指定モードでは結果が変わらないので自動更新しない
-    if (simDateTime) return;
+    if (searchMode !== "now") return;
     const id = setInterval(fetchRoutes, 30000);
     return () => clearInterval(id);
-  }, [fetchRoutes, simDateTime]);
+  }, [fetchRoutes, searchMode]);
 
   const isToStation = routeOption === "to_linimo" || routeOption === "to_aichi_kanjo";
   const isLinimo = routeOption === "to_linimo" || routeOption === "from_linimo";
@@ -316,7 +317,7 @@ export default function MainClient() {
 
   // 出発時刻を過ぎたら自動で次の便に切り替える（30秒ポーリングを待たない）
   useEffect(() => {
-    if (!countdownTime || simDateTime) return;
+    if (!countdownTime || searchMode !== "now") return;
     const [h, m] = countdownTime.split(":").map(Number);
     const dep = new Date();
     dep.setHours(h, m, 0, 0);
@@ -324,7 +325,7 @@ export default function MainClient() {
     if (delay <= 0 || delay > 60 * 60 * 1000) return;
     const id = setTimeout(fetchRoutes, delay);
     return () => clearTimeout(id);
-  }, [countdownTime, fetchRoutes, simDateTime]);
+  }, [countdownTime, fetchRoutes, searchMode]);
 
   return (
     <div>
@@ -412,26 +413,36 @@ export default function MainClient() {
               )}
 
               <div className="form-group">
-                <label>日時を指定して検索（例: 明日の朝）</label>
-                <div className="sim-datetime-row">
-                  <input
-                    type="date"
-                    value={simDraft.date}
-                    onChange={(e) => setSimDraft((p) => ({ ...p, date: e.target.value }))}
-                  />
-                  <input
-                    type="time"
-                    value={simDraft.time}
-                    onChange={(e) => setSimDraft((p) => ({ ...p, time: e.target.value }))}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => simDraft.date && simDraft.time && setSimDateTime({ ...simDraft })}
-                  >
-                    この日時で検索
-                  </button>
+                <label>検索基準</label>
+                <div className="mode-segment">
+                  {([["now", "今すぐ"], ["departure", "出発時刻"], ["arrival", "到着時刻"]] as const).map(([v, l]) => (
+                    <button
+                      key={v}
+                      type="button"
+                      className={`mode-segment-btn ${searchMode === v ? "active" : ""}`}
+                      onClick={() => setSearchMode(v)}
+                    >
+                      {l}
+                    </button>
+                  ))}
                 </div>
+                {searchMode !== "now" && (
+                  <div className="sim-datetime-row" style={{ marginTop: "0.5rem" }}>
+                    <input
+                      type="date"
+                      value={simDraft.date}
+                      onChange={(e) => setSimDraft((p) => ({ ...p, date: e.target.value }))}
+                    />
+                    <input
+                      type="time"
+                      value={simDraft.time}
+                      onChange={(e) => setSimDraft((p) => ({ ...p, time: e.target.value }))}
+                    />
+                    <span style={{ fontSize: "0.85rem", color: "#666" }}>
+                      {searchMode === "departure" ? "に出発" : "までに到着"}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             </div>
@@ -439,10 +450,14 @@ export default function MainClient() {
         </section>
 
         {/* 日時指定モードのバナー */}
-        {simDateTime && (
+        {searchMode !== "now" && (
           <div className="sim-banner">
-            <span>📅 {simDateTime.date.replaceAll("-", "/")} {simDateTime.time} 時点の検索結果</span>
-            <button type="button" onClick={() => setSimDateTime(null)}>今に戻る</button>
+            <span>
+              {searchMode === "departure"
+                ? `📅 ${simDraft.date.replaceAll("-", "/")} ${simDraft.time} 出発基準の検索結果`
+                : `🎯 ${simDraft.date.replaceAll("-", "/")} ${simDraft.time} までに到着する便（遅い順）`}
+            </span>
+            <button type="button" onClick={() => setSearchMode("now")}>今に戻る</button>
           </div>
         )}
 
@@ -459,7 +474,13 @@ export default function MainClient() {
               lineCode={lineCode}
               fromName={apiData.from_name}
               toName={apiData.to_name}
-              countdownTime={simDateTime ? "" : countdownTime}
+              countdownTime={searchMode !== "now" ? "" : countdownTime}
+              titleOverride={searchMode === "arrival" ? "間に合う最終の便" : undefined}
+              countdownFallback={
+                searchMode === "arrival"
+                  ? `${fmt(direction === "to_station" ? primaryRoute.destination_arrival : primaryRoute.shuttle_arrival)} 着`
+                  : undefined
+              }
               expanded={nextDepExpanded}
               onToggle={() => setNextDepExpanded((v) => !v)}
             />
@@ -550,6 +571,8 @@ function NextDeparture({
   countdownTime,
   expanded,
   onToggle,
+  titleOverride,
+  countdownFallback,
 }: {
   route: RouteResult;
   direction: string;
@@ -559,6 +582,8 @@ function NextDeparture({
   countdownTime: string;
   expanded: boolean;
   onToggle: () => void;
+  titleOverride?: string;
+  countdownFallback?: string;
 }) {
   const countdown = useCountdown(countdownTime);
   const [selectedLinimo, setSelectedLinimo] = useState(0);
@@ -638,12 +663,12 @@ function NextDeparture({
         onToggle();
       }}
     >
-      <div className="next-departure-title">{title}</div>
+      <div className="next-departure-title">{titleOverride ?? title}</div>
       <div className="next-departure-time">{departureTime} 発</div>
       <div className="next-departure-info">{routeInfo}</div>
       <div style={{ textAlign: "center" }}>
         <span className={`countdown ${countdown.urgent ? "urgent" : ""}`}>
-          {countdown.text || `あと ${route.waiting_time}分`}
+          {countdown.text || countdownFallback || `あと ${route.waiting_time}分`}
         </span>
       </div>
       <div className="expand-hint">タップで詳細を表示 ▼</div>
