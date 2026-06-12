@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -151,6 +151,16 @@ export default function MainClient() {
     };
   });
 
+  // サイト設定（メンテナンスモード）
+  const [siteConfig, setSiteConfig] = useState<{ maintenance: boolean; maintenance_message: string } | null>(null);
+  useEffect(() => {
+    fetch("/api/site-config")
+      .then((r) => r.json())
+      .then((j) => setSiteConfig(j.data))
+      .catch(() => {});
+  }, []);
+  const inMaintenance = !!siteConfig?.maintenance;
+
   // 非公式警告は初回訪問時のみ全文表示し、以降は1行に畳む
   useEffect(() => {
     try {
@@ -254,7 +264,13 @@ export default function MainClient() {
     if (org) setOrigin(org);
   }, [searchParams]);
 
+  // 直前のリクエストを中断して、古い応答が新しい検索結果を上書きするのを防ぐ
+  const fetchAbortRef = useRef<AbortController | null>(null);
+
   const fetchRoutes = useCallback(async () => {
+    fetchAbortRef.current?.abort();
+    const ctrl = new AbortController();
+    fetchAbortRef.current = ctrl;
     setLoading(true);
     const direction = routeOption === "from_linimo" || routeOption === "from_aichi_kanjo" ? "to_university" : "to_station";
     const lineCode = routeOption.includes("aichi") ? "aichi_kanjo" : "linimo";
@@ -272,11 +288,13 @@ export default function MainClient() {
       if (searchMode === "arrival") params.set("search_mode", "arrival");
     }
     try {
-      const res = await fetch(`/api/next-connection?${params}`);
+      const res = await fetch(`/api/next-connection?${params}`, { signal: ctrl.signal });
       const json = await res.json();
-      if (json.success) setApiData(json.data);
+      if (!ctrl.signal.aborted && json.success) setApiData(json.data);
+    } catch {
+      // 中断・通信エラー時は表示を維持する
     } finally {
-      setLoading(false);
+      if (!ctrl.signal.aborted) setLoading(false);
     }
   }, [routeOption, destination, origin, searchParams, searchMode, simDraft]);
 
@@ -461,8 +479,16 @@ export default function MainClient() {
           </div>
         )}
 
-        {/* 次の便 */}
-        {loading ? (
+        {/* 次の便（メンテナンス中は案内に差し替え） */}
+        {inMaintenance ? (
+          <div className="no-service-card">
+            <strong>🛠 メンテナンス中です</strong>
+            <p>{siteConfig?.maintenance_message || "データ更新作業のため一時的に検索を停止しています。"}</p>
+            <p style={{ fontSize: "0.85rem", opacity: 0.85 }}>
+              お急ぎの場合は <a href="https://www.linimo.jp/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff" }}>リニモ公式サイト</a> 等をご確認ください
+            </p>
+          </div>
+        ) : loading ? (
           <div className="next-departure" style={{ textAlign: "center" }}>
             <div style={{ padding: "1rem" }}>読み込み中...</div>
           </div>
@@ -503,7 +529,7 @@ export default function MainClient() {
         ) : null}
 
         {/* 臨時シャトルバス案内（A・Bダイヤ 7:55〜10:45） */}
-        {apiData?.extra_shuttle_notice && (
+        {!inMaintenance && apiData?.extra_shuttle_notice && (
           <div className="extra-shuttle-notice">
             🚌 この時間帯（7:55〜10:45）は上記時刻表のほかに臨時シャトルバスも往復運行しています
           </div>
