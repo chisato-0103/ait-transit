@@ -141,6 +141,15 @@ export default function MainClient() {
   const [origin, setOrigin] = useState("fujigaoka");
   const [searchOpen, setSearchOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(false);
+  // 日時指定検索（nullなら「今」基準のライブ表示）
+  const [simDateTime, setSimDateTime] = useState<{ date: string; time: string } | null>(null);
+  const [simDraft, setSimDraft] = useState(() => {
+    const d = new Date();
+    return {
+      date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+      time: "08:00",
+    };
+  });
 
   // 非公式警告は初回訪問時のみ全文表示し、以降は1行に畳む
   useEffect(() => {
@@ -256,6 +265,11 @@ export default function MainClient() {
     const testTime = searchParams.get("test_time");
     if (testDate) params.set("test_date", testDate);
     if (testTime) params.set("test_time", testTime);
+    // 日時指定検索はURLのテストパラメータより優先
+    if (simDateTime) {
+      params.set("test_date", simDateTime.date);
+      params.set("test_time", `${simDateTime.time}:00`);
+    }
     try {
       const res = await fetch(`/api/next-connection?${params}`);
       const json = await res.json();
@@ -263,13 +277,15 @@ export default function MainClient() {
     } finally {
       setLoading(false);
     }
-  }, [routeOption, destination, origin, searchParams]);
+  }, [routeOption, destination, origin, searchParams, simDateTime]);
 
   useEffect(() => {
     fetchRoutes();
+    // 日時指定モードでは結果が変わらないので自動更新しない
+    if (simDateTime) return;
     const id = setInterval(fetchRoutes, 30000);
     return () => clearInterval(id);
-  }, [fetchRoutes]);
+  }, [fetchRoutes, simDateTime]);
 
   const isToStation = routeOption === "to_linimo" || routeOption === "to_aichi_kanjo";
   const isLinimo = routeOption === "to_linimo" || routeOption === "from_linimo";
@@ -300,7 +316,7 @@ export default function MainClient() {
 
   // 出発時刻を過ぎたら自動で次の便に切り替える（30秒ポーリングを待たない）
   useEffect(() => {
-    if (!countdownTime) return;
+    if (!countdownTime || simDateTime) return;
     const [h, m] = countdownTime.split(":").map(Number);
     const dep = new Date();
     dep.setHours(h, m, 0, 0);
@@ -308,7 +324,7 @@ export default function MainClient() {
     if (delay <= 0 || delay > 60 * 60 * 1000) return;
     const id = setTimeout(fetchRoutes, delay);
     return () => clearTimeout(id);
-  }, [countdownTime, fetchRoutes]);
+  }, [countdownTime, fetchRoutes, simDateTime]);
 
   return (
     <div>
@@ -395,10 +411,40 @@ export default function MainClient() {
                 </div>
               )}
 
+              <div className="form-group">
+                <label>日時を指定して検索（例: 明日の朝）</label>
+                <div className="sim-datetime-row">
+                  <input
+                    type="date"
+                    value={simDraft.date}
+                    onChange={(e) => setSimDraft((p) => ({ ...p, date: e.target.value }))}
+                  />
+                  <input
+                    type="time"
+                    value={simDraft.time}
+                    onChange={(e) => setSimDraft((p) => ({ ...p, time: e.target.value }))}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => simDraft.date && simDraft.time && setSimDateTime({ ...simDraft })}
+                  >
+                    この日時で検索
+                  </button>
+                </div>
+              </div>
             </div>
             </div>
           )}
         </section>
+
+        {/* 日時指定モードのバナー */}
+        {simDateTime && (
+          <div className="sim-banner">
+            <span>📅 {simDateTime.date.replaceAll("-", "/")} {simDateTime.time} 時点の検索結果</span>
+            <button type="button" onClick={() => setSimDateTime(null)}>今に戻る</button>
+          </div>
+        )}
 
         {/* 次の便 */}
         {loading ? (
@@ -413,7 +459,7 @@ export default function MainClient() {
               lineCode={lineCode}
               fromName={apiData.from_name}
               toName={apiData.to_name}
-              countdownTime={countdownTime}
+              countdownTime={simDateTime ? "" : countdownTime}
               expanded={nextDepExpanded}
               onToggle={() => setNextDepExpanded((v) => !v)}
             />
