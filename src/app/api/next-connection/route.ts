@@ -49,8 +49,12 @@ export async function GET(req: NextRequest) {
   let toName = "";
   let routes: ReturnType<typeof calculateUniversityToStation> = [];
 
-  // 到着基準: 期限の3時間前を起点に順方向計算し、期限までに着く便を抽出
-  const searchBase = searchMode === "arrival" ? addMinutes(currentTime, -ARRIVAL_WINDOW_MINUTES) : currentTime;
+  // 到着基準: 期限の3時間前（0時以前にはしない）を起点に順方向計算し、期限までに着く便を抽出
+  const arrivalBaseMin = Math.max(0, timeToMinutes(currentTime) - ARRIVAL_WINDOW_MINUTES);
+  const searchBase =
+    searchMode === "arrival"
+      ? `${String(Math.floor(arrivalBaseMin / 60)).padStart(2, "0")}:${String(arrivalBaseMin % 60).padStart(2, "0")}:00`
+      : currentTime;
   const searchLimit = searchMode === "arrival" ? 40 : limit;
 
   if (direction === "to_station") {

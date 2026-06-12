@@ -137,9 +137,10 @@ export function calculateDuration(start: string, end: string): number {
 }
 
 export function addMinutes(time: string, minutes: number): string {
-  const total = timeToMinutes(time) + minutes;
-  const h = Math.floor(total / 60) % 24;
-  const m = ((total % 60) + 60) % 60;
+  // 負方向も含めて24時間制に正しく丸める
+  const total = ((timeToMinutes(time) + minutes) % 1440 + 1440) % 1440;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
 }
 
