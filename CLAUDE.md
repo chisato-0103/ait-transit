@@ -35,6 +35,7 @@
 - 開発: npm run dev
 - ビルド確認: npm run build
 - 型チェック: tsc --noEmit
+- テスト: npm test（回帰テスト。データ変更後は必ず実行）
 - 動作確認: /?test_date=2025-10-15&test_time=09:00:00
   で任意日時をシミュレート可能
 
