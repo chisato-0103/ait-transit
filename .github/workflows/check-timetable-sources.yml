@@ -1,0 +1,45 @@
+# 公式時刻表ソースの変更を週次で監視し、変化があればIssueを作成する
+name: 公式時刻表ソースの監視
+
+on:
+  schedule:
+    # 毎週月曜 6:00 JST (= 日曜 21:00 UTC)
+    - cron: "0 21 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: ソースのハッシュを比較
+        id: check
+        run: node scripts/check-official-sources.mjs
+
+      - name: 変更があればIssueを作成
+        if: steps.check.outputs.changed != '0' || steps.check.outputs.errors != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BODY: ${{ steps.check.outputs.body }}
+        run: |
+          gh issue create \
+            --title "⚠️ 公式時刻表ソースに変更を検知（ダイヤ改正の可能性）" \
+            --body "$(printf '以下の公式ソースに変更を検知しました。ダイヤ改正の可能性があります。\n\n%s\n\nCLAUDE.mdのデータ品質ルールに従って再取得・全件照合を実施してください。\n（このIssueは check-timetable-sources ワークフローが自動作成しました）' "$BODY")"
+
+      - name: 新しいハッシュをcommit
+        if: steps.check.outputs.changed != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data-source-hashes.json
+          git commit -m "chore: 公式ソースのハッシュを更新（変更検知済み・Issue参照）"
+          git push
