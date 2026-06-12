@@ -46,6 +46,10 @@ export default function AdminPage() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [saveResult, setSaveResult] = useState("");
   const [saving, setSaving] = useState(false);
+  const [maintenance, setMaintenance] = useState(false);
+  const [maintenanceMsg, setMaintenanceMsg] = useState("");
+  const [configResult, setConfigResult] = useState("");
+  const [configSaving, setConfigSaving] = useState(false);
 
   const api = useCallback(
     async (path: string, init?: RequestInit) => {
@@ -77,7 +81,31 @@ export default function AdminPage() {
     api("/api/admin/notices").then(async (r) => {
       if (r.ok) setNotices((await r.json()).data);
     });
+    fetch("/api/site-config").then(async (r) => {
+      if (r.ok) {
+        const cfg = (await r.json()).data;
+        setMaintenance(!!cfg.maintenance);
+        setMaintenanceMsg(cfg.maintenance_message ?? "");
+      }
+    });
   }, [authed, api]);
+
+  const saveConfig = async () => {
+    setConfigSaving(true);
+    setConfigResult("");
+    try {
+      const res = await api("/api/admin/site-config", {
+        method: "PUT",
+        body: JSON.stringify({ maintenance, maintenance_message: maintenanceMsg }),
+      });
+      const json = await res.json();
+      setConfigResult(res.ok ? `✅ ${json.detail}` : `❌ 保存失敗: ${json.detail ?? json.error}`);
+    } catch {
+      setConfigResult("❌ 通信エラー");
+    } finally {
+      setConfigSaving(false);
+    }
+  };
 
   const update = (id: number, patch: Partial<Notice>) =>
     setNotices((ns) => ns.map((n) => (n.id === id ? { ...n, ...patch } : n)));
@@ -114,7 +142,7 @@ export default function AdminPage() {
                 <input id="pw" type="password" value={token} onChange={(e) => setToken(e.target.value)} style={inputStyle} autoFocus />
               </div>
               {authError && <p style={{ color: "#c00", fontSize: "0.9rem", marginBottom: "0.5rem" }}>{authError}</p>}
-              <button type="submit" className="btn btn-primary">ログイン</button>
+              <button type="submit" className="btn btn-primary" style={{ marginTop: "0.75rem" }}>ログイン</button>
             </form>
           </div>
           <div style={{ marginTop: "1rem", textAlign: "center" }}><a href="/">← トップに戻る</a></div>
@@ -147,6 +175,29 @@ export default function AdminPage() {
             </details>
           </div>
         )}
+
+        <div className="search-area" style={{ padding: "1rem", marginBottom: "1rem" }}>
+          <h2 style={{ fontSize: "1.05rem", marginBottom: "0.75rem" }}>🛠 メンテナンスモード</h2>
+          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+            <input type="checkbox" checked={maintenance} onChange={(e) => setMaintenance(e.target.checked)} />
+            メンテナンス中にする（トップページの検索結果を停止して案内を表示）
+          </label>
+          {maintenance && (
+            <textarea
+              placeholder="表示するメッセージ（例: ダイヤ改正データの更新作業中です。今日中に復旧します）"
+              value={maintenanceMsg}
+              rows={2}
+              onChange={(e) => setMaintenanceMsg(e.target.value)}
+              style={{ ...inputStyle, resize: "vertical", marginBottom: "0.75rem" }}
+            />
+          )}
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap", marginTop: "0.5rem" }}>
+            <button type="button" className="btn btn-primary" onClick={saveConfig} disabled={configSaving}>
+              {configSaving ? "保存中..." : "保存"}
+            </button>
+            {configResult && <span style={{ fontSize: "0.85rem" }}>{configResult}</span>}
+          </div>
+        </div>
 
         <div className="search-area" style={{ padding: "1rem" }}>
           <h2 style={{ fontSize: "1.05rem", marginBottom: "0.75rem" }}>📢 お知らせ管理</h2>
