@@ -36,7 +36,7 @@ jobs:
             --body "$(printf '以下の公式ソースに変更を検知しました。ダイヤ改正の可能性があります。\n\n%s\n\nCLAUDE.mdのデータ品質ルールに従って再取得・全件照合を実施してください。\n（このIssueは check-timetable-sources ワークフローが自動作成しました）' "$BODY")"
 
       - name: 新しいハッシュをcommit
-        if: steps.check.outputs.changed != '0'
+        if: steps.check.outputs.changed != '0' || steps.check.outputs.errors != '0' || steps.check.outputs.recovered != '0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

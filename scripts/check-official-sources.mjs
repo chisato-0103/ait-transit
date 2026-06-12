@@ -22,12 +22,25 @@ const SOURCES = [
 ];
 
 const sha256 = (data) => createHash("sha256").update(data).digest("hex");
+const FETCH_FAILED = "fetch_failed";
 
 async function fetchSource({ url, type }) {
-  const res = await fetch(url, { headers: { "User-Agent": UA }, redirect: "follow" });
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": UA,
+      Accept: "text/html,application/xhtml+xml,application/pdf,*/*",
+      "Accept-Language": "ja,en;q=0.8",
+    },
+    redirect: "follow",
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   if (type === "binary") {
-    return sha256(Buffer.from(await res.arrayBuffer()));
+    const buf = Buffer.from(await res.arrayBuffer());
+    // PDF以外（bot対策ページ等）が返ってきたら変更ではなく取得失敗として扱う
+    if (!buf.subarray(0, 5).toString("latin1").startsWith("%PDF")) {
+      throw new Error("PDFでない応答（bot対策等の可能性）");
+    }
+    return sha256(buf);
   }
   const html = await res.text();
   if (type === "html-tables") {
@@ -53,14 +66,16 @@ try {
 
 const current = {};
 const changed = [];
-const errors = [];
+const errors = []; // 新規に発生した取得エラーのみ（毎週同じ通知を繰り返さない）
+let recovered = 0; // fetch_failed状態から取得成功に復帰（基準ハッシュを定着させる）
 for (const src of SOURCES) {
   try {
     current[src.id] = await fetchSource(src);
-    if (stored[src.id] && stored[src.id] !== current[src.id]) changed.push(src);
+    if (stored[src.id] === FETCH_FAILED) recovered++;
+    else if (stored[src.id] && stored[src.id] !== current[src.id]) changed.push(src);
   } catch (e) {
-    errors.push(`${src.id}: ${e.message}`);
-    current[src.id] = stored[src.id] ?? "fetch_failed";
+    current[src.id] = FETCH_FAILED;
+    if (stored[src.id] !== FETCH_FAILED) errors.push(`${src.id}: ${e.message}`);
   }
 }
 
@@ -74,7 +89,7 @@ if (errors.length) {
 }
 if (!changed.length && !errors.length) console.log("変更なし");
 
-if (update || changed.length) {
+if (update || changed.length || errors.length || recovered) {
   writeFileSync(HASH_FILE, JSON.stringify(current, null, 2) + "\n");
 }
 
@@ -86,5 +101,6 @@ if (process.env.GITHUB_OUTPUT) {
   ].join("\n");
   appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed.length}\n`);
   appendFileSync(process.env.GITHUB_OUTPUT, `errors=${errors.length}\n`);
+  appendFileSync(process.env.GITHUB_OUTPUT, `recovered=${recovered}\n`);
   appendFileSync(process.env.GITHUB_OUTPUT, `body<<EOF\n${body}\nEOF\n`);
 }
