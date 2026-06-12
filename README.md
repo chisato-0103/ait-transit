@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 愛工大交通情報システム（ait-transit）
 
-## Getting Started
+愛知工業大学の学生向けに、**学内シャトルバス・リニモ・愛知環状鉄道の乗継**を案内する非公式Webアプリです。
+「アプリを開いた瞬間に、次に乗るべき便と乗継がわかる」ことを目指しています。
 
-First, run the development server:
+> ⚠️ 非公式サービスです。実際の利用時は各公式サイトの情報をご確認ください。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 主な機能
+
+- **次の乗継をリアルタイム表示** — シャトルバス⇄リニモ⇄愛環の乗継を計算し、出発までのカウントダウン付きで表示。出発後は自動で次の便に切替
+- **3つの検索基準** — 「今すぐ」「出発時刻指定」「到着時刻指定（〇時までに着く最終便の逆算）」
+- **使うほど手間が減るUI** — 前回の路線・駅を記憶し、時間帯で方向を自動選択（午前=通学、午後=帰宅）。開くだけで答えが出る
+- **終バスの常時表示** — 「本日の終バス 21:45」をトップに表示し、帰れなくなる事故を防止
+- **PWA対応** — ホーム画面に追加でき、オフライン時は最後の取得結果を表示
+- **管理画面（/admin）** — お知らせのCRUD・メンテナンスモード切替。本番ではGitHub APIにcommitして自動デプロイで反映
+- **お問い合わせフォーム** — カテゴリ別の受付（データの誤り報告には照合に必要な項目のガイドを表示）
+
+## データの正確さへのこだわり（このプロジェクトの核）
+
+時刻表アプリは「嘘の時刻を1件でも出したら信頼を失う」ため、データ品質に最も力を入れています。
+
+1. **必ず公式ソースから取得** — 時刻表データを手入力やAIの記憶から生成せず、公式サイト・公式PDFをプログラムでパースして生成
+   - リニモ: 駅別時刻表ページのHTML（平日/土休日は公式表のオレンジ時刻規則で判別）
+   - シャトルバス: 大学公式PDF（pdftotextの座標情報で左右テーブル・両数表記を分離）
+   - 愛知環状鉄道: 23駅の駅別PDF（pdfminerで**文字の色**まで抽出し、黒=毎日運転/赤=土休日運休/青=臨時を判別。行先ラベルから手前止まり列車の到達可否も判定）
+2. **多重検証** — データ生成のたびに実施
+   - 独立した手法での再パースと全件照合
+   - 列車追跡検証（全2,744本を隣接駅間で追跡し、時刻の整合を確認）
+   - ランダム抽出した便の公式原文との目視照合
+3. **ダイヤ改正の自動監視** — GitHub Actionsが週次で公式ソースのハッシュを比較し、変更を検知するとIssueを自動作成（[ワークフロー](.github/workflows/check-timetable-sources.yml)）
+
+この方針により、移行元データに混入していた「現行ダイヤと約8%相違する旧ダイヤ」「終端駅の到着時刻を出発時刻として流用」などの問題を発見・解消してきました。
+
+## アーキテクチャ
+
+```
+src/
+├── data/                  # 時刻表データ（JSON直管理・DBなし）
+│   ├── linimo_timetable.json        リニモ 4,671件
+│   ├── aichi_kanjo_timetable.json   愛環 5,757件（平日/土休日・行先付き）
+│   ├── shuttle_bus_timetable.json   シャトル 269件（A/B/Cダイヤ）
+│   └── shuttle_schedule.json        年間運行カレンダー 365日分
+├── lib/timetable.ts       # 乗継計算ロジック（ダイヤ判定・到達可否・逆算検索）
+├── components/MainClient.tsx  # メインUI
+└── app/
+    ├── api/next-connection    # 乗継検索API（出発/到着基準）
+    ├── api/notices, site-config, contact, admin/*  # お知らせ・設定・問い合わせ・管理
+    └── admin/                 # 管理画面
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **DBを持たない設計**: 時刻表は改正時にしか変わらないためJSONをリポジトリで管理。`git push` = データデプロイ（Vercelが自動デプロイ）
+- **管理画面の書き込み**: ローカルではファイル直接更新、本番（読み取り専用FS）ではGitHub Contents APIへcommit → 自動デプロイで反映
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 技術スタック
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Next.js 16 (App Router) / TypeScript / Vercel / PWA (Service Worker) / Vercel Analytics
 
-## Learn More
+データ生成・検証: Python (pdfminer.six) / Node.js / GitHub Actions
 
-To learn more about Next.js, take a look at the following resources:
+## 開発
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev        # 開発サーバー
+npm run build      # 本番ビルド
+npx tsc --noEmit   # 型チェック
+node scripts/check-official-sources.mjs  # 公式ソースの変更チェック
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+任意の日時で動作確認: `/?test_date=2026-10-15&test_time=09:00:00`
 
-## Deploy on Vercel
+### 環境変数
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| 変数 | 用途 |
+|------|------|
+| `FORMSPREE_ID` | お問い合わせの転送先（サーバー側でのみ使用） |
+| `ADMIN_PASSWORD` | 管理画面のパスワード（未設定なら管理機能は無効） |
+| `GITHUB_TOKEN` / `GITHUB_REPO` | 本番の管理画面からデータを保存する場合（Contents Read/Write） |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ライセンス・データについて
+
+時刻表データの出典は各事業者の公式公開情報です（リニモ: linimo.jp / 愛知環状鉄道: aikanrailway.co.jp / シャトルバス: ait.ac.jp）。
+本アプリは個人開発の非公式サービスであり、各事業者・大学とは関係ありません。
