@@ -322,6 +322,10 @@ export default function MainClient() {
   const otherRoutes = apiData?.routes.slice(1) ?? [];
 
   // カウントダウン用の出発時刻
+  // ライブカウントダウンが妥当なのは「今すぐ」かつURLに時刻偽装(test_time)が無いときのみ。
+  // test_time指定時は表示便がその時刻基準なので、実時刻基準のカウントダウンはズレる。
+  const isLiveNow = searchMode === "now" && !searchParams.get("test_time");
+
   let countdownTime = "";
   if (primaryRoute) {
     if (direction === "to_station") {
@@ -335,7 +339,7 @@ export default function MainClient() {
 
   // 出発時刻を過ぎたら自動で次の便に切り替える（30秒ポーリングを待たない）
   useEffect(() => {
-    if (!countdownTime || searchMode !== "now") return;
+    if (!countdownTime || !isLiveNow) return;
     const [h, m] = countdownTime.split(":").map(Number);
     const dep = new Date();
     dep.setHours(h, m, 0, 0);
@@ -343,7 +347,7 @@ export default function MainClient() {
     if (delay <= 0 || delay > 60 * 60 * 1000) return;
     const id = setTimeout(fetchRoutes, delay);
     return () => clearTimeout(id);
-  }, [countdownTime, fetchRoutes, searchMode]);
+  }, [countdownTime, fetchRoutes, isLiveNow]);
 
   return (
     <div>
@@ -500,7 +504,7 @@ export default function MainClient() {
               lineCode={lineCode}
               fromName={apiData.from_name}
               toName={apiData.to_name}
-              countdownTime={searchMode !== "now" ? "" : countdownTime}
+              countdownTime={isLiveNow ? countdownTime : ""}
               titleOverride={searchMode === "arrival" ? "間に合う最終の便" : undefined}
               countdownFallback={
                 searchMode === "arrival"
