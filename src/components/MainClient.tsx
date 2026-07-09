@@ -90,6 +90,10 @@ type RouteOption = "to_linimo" | "from_linimo" | "to_aichi_kanjo" | "from_aichi_
 // 前回の検索条件（路線と駅）の保存キー。方向は開いた時間帯から自動決定する
 const LAST_SEARCH_KEY = "ait-transit:last-search";
 
+// 開発者への任意の応援（投げ銭）リンク。PayPay のマイコードURLを設定する
+// （空文字にすると応援リンク自体を表示しない）
+const SUPPORT_URL = "https://qr.paypay.ne.jp/p2p01_OXF0V9Ik02KTcGsh";
+
 // ============================================================
 // ユーティリティ
 // ============================================================
@@ -583,6 +587,19 @@ export default function MainClient() {
         <p style={{ fontSize: "0.8em", marginTop: "12px" }}>
           <a href="/contact">お問い合わせ</a>
         </p>
+        {/* 開発者への任意の応援（見返りなし）。URL未設定の間は非表示 */}
+        {SUPPORT_URL && (
+          <>
+            <p style={{ fontSize: "0.8em", marginTop: "12px" }}>
+              <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+                ☕ 開発者を応援する
+              </a>
+            </p>
+            <p style={{ fontSize: "0.75em", marginTop: "4px", opacity: 0.8 }}>
+              このアプリが役に立ったら、よかったら応援してもらえると嬉しいです（任意・見返りはありません）。
+            </p>
+          </>
+        )}
       </footer>
     </div>
   );
