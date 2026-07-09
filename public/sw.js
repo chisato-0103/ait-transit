@@ -1,7 +1,7 @@
 // 愛工大交通情報システム Service Worker
 // 方針: キャッシュ優先はコンテンツハッシュ付きの /_next/static と画像のみ。
 // それ以外（ページ・API・その他）はネットワーク優先＋オフライン時キャッシュ。
-const CACHE = "ait-transit-v3";
+const CACHE = "ait-transit-v4";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
