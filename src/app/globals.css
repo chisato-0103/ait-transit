@@ -473,6 +473,7 @@ a { color: var(--primary-color); }
   padding: 2rem 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+  margin-bottom: 1.5rem;
 }
 .no-service-card strong { display: block; font-size: 1.3rem; margin-bottom: 1rem; }
 .no-service-card p { margin-bottom: 0.5rem; font-size: 1rem; }
