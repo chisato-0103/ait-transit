@@ -38,7 +38,7 @@ interface Overview {
   today_dia_base: string;
   tomorrow_dia_base: string;
   overrides_total: number;
-  overrides_source: "local" | "github" | "fallback";
+  overrides_source: "local" | "github" | "stale" | "fallback";
   overrides_fetched_at: string | null;
   datasets: {
     shuttle_bus: number;
@@ -77,6 +77,7 @@ export default function AdminPage() {
   const [dias, setDias] = useState<DiaOverride[]>([]);
   const [diaResult, setDiaResult] = useState("");
   const [diaSaving, setDiaSaving] = useState(false);
+  const [diaLoaded, setDiaLoaded] = useState(false);
 
   const api = useCallback(
     async (path: string, init?: RequestInit) => {
@@ -108,9 +109,13 @@ export default function AdminPage() {
     api("/api/admin/notices").then(async (r) => {
       if (r.ok) setNotices((await r.json()).data);
     });
-    api("/api/admin/dia-overrides").then(async (r) => {
-      if (r.ok) setDias((await r.json()).data);
-    });
+    api("/api/admin/dia-overrides")
+      .then(async (r) => {
+        if (!r.ok) throw new Error("load_failed");
+        setDias((await r.json()).data);
+        setDiaLoaded(true);
+      })
+      .catch(() => setDiaResult("❌ 臨時ダイヤを読み込めませんでした。ページを再読み込みしてください"));
     fetch("/api/site-config").then(async (r) => {
       if (r.ok) {
         const cfg = (await r.json()).data;
@@ -265,10 +270,12 @@ export default function AdminPage() {
                   <>{overview.tomorrow_dia}ダイヤ</>
                 )}
               </div>
-              <div style={{ marginTop: "0.25rem", fontSize: "0.8rem", color: overview.overrides_source === "fallback" ? "#c00" : "#666" }}>
+              <div style={{ marginTop: "0.25rem", fontSize: "0.8rem", color: overview.overrides_source === "github" || overview.overrides_source === "local" ? "#666" : "#c00" }}>
                 {overview.overrides_source === "fallback"
                   ? "⚠ 上書きデータを取得できず、ビルド時のデータで動作しています"
-                  : `取得元: ${overview.overrides_source === "github" ? "GitHub（本番）" : "ローカルファイル"}`}
+                  : overview.overrides_source === "stale"
+                    ? "⚠ 最新を取得できず、直前に取得した内容で動作しています"
+                    : `取得元: ${overview.overrides_source === "github" ? "GitHub（本番）" : "ローカルファイル"}`}
                 {overview.overrides_fetched_at && ` / 最終取得 ${overview.overrides_fetched_at.slice(11, 19)}`}
               </div>
             </div>
@@ -288,8 +295,8 @@ export default function AdminPage() {
             </div>
           ))}
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-            <button type="button" className="btn" onClick={addDia} style={{ border: "1px solid var(--primary-color)", color: "var(--primary-color)", background: "none" }}>＋ 追加</button>
-            <button type="button" className="btn btn-primary" onClick={saveDias} disabled={diaSaving || diaInvalid}>
+            <button type="button" className="btn" onClick={addDia} disabled={!diaLoaded} style={{ border: "1px solid var(--primary-color)", color: "var(--primary-color)", background: "none" }}>＋ 追加</button>
+            <button type="button" className="btn btn-primary" onClick={saveDias} disabled={diaSaving || diaInvalid || !diaLoaded}>
               {diaSaving ? "保存中..." : "保存"}
             </button>
             {diaInvalid && <span style={{ fontSize: "0.85rem", color: "#c00" }}>日付が未入力か重複しています</span>}

@@ -15,12 +15,14 @@ export const MAX_OVERRIDES = 100;
 export const MAX_MEMO_LENGTH = 100;
 
 const CACHE_TTL_MS = 30_000;
+// 取得に失敗した直後は短い間隔で取り直す
+const STALE_RETRY_MS = 10_000;
 const FETCH_TIMEOUT_MS = 5_000;
 
 export interface DiaOverrideSource {
   overrides: DiaOverride[];
-  /** local=開発環境のFS / github=本番の最新 / fallback=取得できずビルド同梱値 */
-  source: "local" | "github" | "fallback";
+  /** local=開発環境のFS / github=本番の最新 / stale=取得失敗で直前の取得値 / fallback=取得できずビルド同梱値 */
+  source: "local" | "github" | "stale" | "fallback";
   fetched_at: string | null;
 }
 
@@ -34,8 +36,12 @@ interface CacheEntry {
 
 let cache: CacheEntry | null = null;
 
-export function clearDiaOverridesCache(): void {
-  cache = null;
+/**
+ * キャッシュを期限切れにして次回必ず取り直させる。
+ * 内容は捨てない。取り直しに失敗したときの拠り所として直前の取得値を残す。
+ */
+export function expireDiaOverridesCache(): void {
+  if (cache) cache = { ...cache, expiresAt: 0 };
 }
 
 // JSTの現在時刻を +09:00 付きISO8601で返す
@@ -60,6 +66,7 @@ export function isValidDateStr(value: unknown): value is string {
 export function validateDiaOverrides(input: unknown): DiaOverride[] | null {
   if (!Array.isArray(input) || input.length > MAX_OVERRIDES) return null;
 
+  const savedAt = nowJstIso();
   const out: DiaOverride[] = [];
   const seen = new Set<string>();
   for (const item of input) {
@@ -81,7 +88,7 @@ export function validateDiaOverrides(input: unknown): DiaOverride[] | null {
       operation_date: o.operation_date,
       dia_type: o.dia_type,
       ...(memo ? { memo } : {}),
-      updated_at: typeof o.updated_at === "string" && o.updated_at ? o.updated_at : nowJstIso(),
+      updated_at: savedAt,
     });
   }
   out.sort((a, b) => a.operation_date.localeCompare(b.operation_date));
@@ -111,14 +118,16 @@ export function sanitizeDiaOverrides(input: unknown): DiaOverride[] {
       continue;
     }
     seen.add(o.operation_date);
+    const memo = typeof o.memo === "string" && o.memo ? Array.from(o.memo).slice(0, MAX_MEMO_LENGTH).join("") : undefined;
     out.push({
       operation_date: o.operation_date,
       dia_type: o.dia_type,
-      ...(typeof o.memo === "string" && o.memo ? { memo: o.memo } : {}),
+      ...(memo ? { memo } : {}),
       updated_at: typeof o.updated_at === "string" ? o.updated_at : "",
     });
   }
-  return out;
+  out.sort((a, b) => a.operation_date.localeCompare(b.operation_date));
+  return out.slice(0, MAX_OVERRIDES);
 }
 
 function fallback(): DiaOverrideSource {
@@ -183,14 +192,17 @@ export async function getDiaOverrides(): Promise<DiaOverrideSource> {
 
   const result = await fetchFromGitHub(cache?.etag ?? null);
   if (result === null) {
-    cache = null;
-    return fallback();
+    // 取得に失敗しても直前に取れた上書きは捨てない。
+    // ビルド同梱データに戻すと、反映済みの緊急変更が取り消されて誤ったダイヤを表示してしまう
+    if (!cache) return fallback();
+    cache = { ...cache, source: "stale", expiresAt: Date.now() + STALE_RETRY_MS };
+    return { overrides: cache.overrides, source: "stale", fetched_at: cache.fetchedAt };
   }
 
   if (result === "not_modified") {
-    // 内容に変化なし。既存のキャッシュ期限だけ延ばす
+    // 内容に変化なし。取得できたので stale から復帰させ、期限だけ延ばす
     if (!cache) return fallback();
-    cache = { ...cache, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt: nowJstIso() };
+    cache = { ...cache, source: "github", expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt: nowJstIso() };
   } else {
     cache = {
       overrides: result.overrides,

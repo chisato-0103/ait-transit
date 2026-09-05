@@ -14,6 +14,7 @@ import {
   calculateStationToUniversity,
   isExtraShuttleWindow,
   type DiaOverride,
+  type DiaType,
 } from "../src/lib/timetable";
 
 let count = 0;
@@ -75,12 +76,16 @@ test("holidayへの上書きはその日を全便運休にする", () => {
 });
 test("A→Bに上書きした日の乗継計算はBダイヤの便を返す", () => {
   const dia = getDiaType("2026-06-12", [override("2026-06-12", "B")]);
-  const expected = getNextShuttleBuses("to_university", "12:00:00", "B", 1)[0];
-  const r = calculateStationToUniversity("setoshi", "11:00:00", dia, "holiday_red", 1)[0];
   assert.equal(dia, "B");
-  assert.ok(expected !== undefined);
-  assert.ok(getNextShuttleBuses("to_university", "12:00:00", "A", 1)[0].departure_time !== expected.departure_time);
-  assert.ok(r !== undefined);
+  const busTimes = (d: DiaType) =>
+    new Set(getNextShuttleBuses("to_university", "0:00:00", d, 500).map((b) => formatTime(b.departure_time)));
+  const r = calculateStationToUniversity("setoshi", "11:00:00", dia, "holiday_red", 1)[0];
+  assert.ok(r?.shuttle_departure);
+  // 実際にBダイヤの時刻表にある便が選ばれ、Aダイヤのままの結果とは異なること
+  assert.ok(busTimes("B").has(r.shuttle_departure));
+  assert.ok(!busTimes("A").has(r.shuttle_departure));
+  const asIsA = calculateStationToUniversity("setoshi", "11:00:00", "A", "weekday_green", 1)[0];
+  assert.notEqual(r.shuttle_departure, asIsA.shuttle_departure);
 });
 
 // ---- リニモ（公式照合済みの既知値） ----

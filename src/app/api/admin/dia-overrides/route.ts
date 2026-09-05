@@ -4,7 +4,7 @@ import { saveDataFile } from "@/lib/adminStore";
 import {
   getDiaOverrides,
   validateDiaOverrides,
-  clearDiaOverridesCache,
+  expireDiaOverridesCache,
   DIA_OVERRIDES_REL_PATH,
 } from "@/lib/diaOverrides";
 
@@ -38,8 +38,8 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: false, error: "save_failed", detail: result.detail }, { status: 500 });
   }
 
-  // 保存直後は必ず取り直す。saveDataFile の文言は自動デプロイ前提なのでここでは使わない
-  clearDiaOverridesCache();
+  // 保存直後は必ず取り直させる。saveDataFile の文言は自動デプロイ前提なのでここでは使わない
+  expireDiaOverridesCache();
   const detail =
     result.saved === "github"
       ? "保存しました。30秒以内に反映されます"
