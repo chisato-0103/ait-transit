@@ -14,3 +14,6 @@ npm-debug.log*
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Superpowers スキルの生成物（設計書・計画書）
+docs/superpowers/
