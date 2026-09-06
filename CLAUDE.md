@@ -59,6 +59,11 @@
   運転日変動）は八草に到達しないため収録対象外
 - 愛環のterminal（行先）は到達可否判定に使用。手前止まり
   （北野桝塚行き等）は目的駅に届かないので除外される
+- シャトルは公式PDFが2種類ある。混同しないこと。
+  時刻表PDF（access_yakusa_time_*.pdf）＝便の時刻。
+  運行予定表PDF（access_yakusa*.pdf）＝日付ごとのダイヤ種別で、
+  こちらが shuttle_schedule.json の唯一の公式ソース。
+  曜日から機械的に決めると行事日（大学祭・OC・入試等）を落とす
 
 ## ロードマップ
 1. ✅ fujigaoka/to_yagusa の欠落修正（2026-06-12完了。
@@ -85,4 +90,10 @@
      再デプロイを待たずに反映される
    - 仕様書:
      docs/superpowers/specs/2026-09-05-shuttle-dia-override-design.md
+7. ✅ 運行カレンダーの正確性対応（2026-09-07完了）
+   - 公式運行予定表PDFから shuttle_schedule.json を全面再生成し
+     365日中48日を修正（土曜52日を全休扱いにしていた等）
+   - 生成は scripts/build-shuttle-schedule.mjs で行う
+     （検証に落ちたら書き込まない）
+   - 運行予定表PDFを check-official-sources.mjs の監視対象に追加
 完了したらこのロードマップを更新すること

@@ -17,6 +17,8 @@ const SOURCES = [
   { id: "リニモ 藤が丘駅時刻表", url: "https://www.linimo.jp/station/2018030611485318.html", type: "html-tables" },
   { id: "シャトルバス 八草キャンパスページのPDFリンク", url: "https://www.ait.ac.jp/about/yakusa-campus/", type: "pdf-links" },
   { id: "シャトルバス 時刻表PDF", url: "https://www.ait.ac.jp/assets/docs/about/yakusa-campus/access_yakusa_time_20260401.pdf", type: "binary" },
+  // 日付ごとのダイヤ種別（A/B/C/休）はこちら。時刻表PDFとは別物なので必ず両方見る
+  { id: "シャトルバス 運行予定表PDF", url: "https://www.ait.ac.jp/assets/docs/about/yakusa-campus/access_yakusa20260114.pdf", type: "binary" },
   { id: "愛環 時刻表ページのPDFリンク", url: "https://www.aikanrailway.co.jp/timetable/", type: "pdf-links" },
   { id: "愛環 八草駅PDF", url: "https://www.aikanrailway.co.jp/pdf/timetable/18yakusa_timetable.pdf", type: "binary" },
 ];
