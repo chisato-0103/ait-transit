@@ -1,5 +1,6 @@
 // timetable.ts の回帰テスト。実行: npm test（npx tsx scripts/timetable.test.ts）
 import assert from "node:assert";
+import { readFileSync } from "node:fs";
 import {
   timeToMinutes,
   addMinutes,
@@ -39,14 +40,31 @@ test("formatTime はゼロ埋めする", () => {
 });
 
 // ---- ダイヤ判定（FY2026運行カレンダー） ----
-test("運行カレンダー: 平日授業期間=A / 6月の土曜=休 / 8月平日=C", () => {
+test("運行カレンダー: 平日授業期間=A / 6月の土曜=休 / 8月の休業期間平日=C", () => {
   assert.equal(getDiaType("2026-06-12"), "A");
   assert.equal(getDiaType("2026-06-13"), "holiday");
-  assert.equal(getDiaType("2026-08-05"), "C");
+  assert.equal(getDiaType("2026-08-17"), "C");
 });
 test("dayType: A=weekday_green、それ以外=holiday_red", () => {
   assert.equal(getDayType("2026-06-12"), "weekday_green");
-  assert.equal(getDayType("2026-08-05"), "holiday_red");
+  assert.equal(getDayType("2026-08-17"), "holiday_red");
+});
+// 曜日から機械的に決めず、公式運行予定表（access_yakusa*.pdf）どおりであること
+test("行事日は土日でも運行する", () => {
+  assert.equal(getDiaType("2026-10-10"), "A");   // 大学祭（土）
+  assert.equal(getDiaType("2026-10-11"), "A");   // 大学祭（日）
+  assert.equal(getDiaType("2026-11-07"), "B");   // 土曜のBダイヤ
+  assert.equal(getDiaType("2027-01-16"), "A");   // 大学入学共通テスト（土）
+});
+test("平日でも運行予定表が休なら運休扱いにする", () => {
+  assert.equal(getDiaType("2026-05-28"), "holiday");
+});
+test("土曜はBダイヤで運行する日がある（全休ではない）", () => {
+  const rows = JSON.parse(readFileSync("src/data/shuttle_schedule.json", "utf-8")) as Array<{ operation_date: string; dia_type: string }>;
+  const sat = rows.filter((r) => new Date(`${r.operation_date}T00:00:00Z`).getUTCDay() === 6);
+  assert.equal(sat.length, 52);
+  assert.ok(sat.some((r) => r.dia_type === "B"), "土曜にBダイヤの日が1日もない");
+  assert.ok(rows.some((r) => r.dia_type === "B"), "運行予定表にBダイヤが1日もない");
 });
 
 // ---- 臨時ダイヤ上書き ----
