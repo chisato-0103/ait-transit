@@ -238,5 +238,13 @@
     "order_index": 30,
     "travel_time_from_yakusa": 17,
     "line_type": "aichi_kanjo"
+  },
+  {
+    "station_code": "daimon",
+    "station_name": "大門",
+    "station_name_en": "Daimon",
+    "order_index": 31,
+    "travel_time_from_yakusa": 39,
+    "line_type": "aichi_kanjo"
   }
 ]

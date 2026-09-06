@@ -7,6 +7,7 @@ import {
   formatTime,
   getDiaType,
   getDayType,
+  getAllStations,
   getNextLinimoTrains,
   getNextAichiKanjoTrains,
   getNextShuttleBuses,
@@ -104,6 +105,18 @@ test("A→Bに上書きした日の乗継計算はBダイヤの便を返す", ()
   assert.ok(!busTimes("A").has(r.shuttle_departure));
   const asIsA = calculateStationToUniversity("setoshi", "11:00:00", "A", "weekday_green", 1)[0];
   assert.notEqual(r.shuttle_departure, asIsA.shuttle_departure);
+});
+
+// ---- 駅マスタと時刻表データの整合 ----
+// 大門が時刻表にだけ存在して駅マスタから漏れていたため、双方向で突き合わせる
+test("愛環の駅マスタと時刻表データの駅がそろっている", () => {
+  const master = new Set(getAllStations().filter((s) => s.line_type === "aichi_kanjo").map((s) => s.station_code));
+  const rows = JSON.parse(readFileSync("src/data/aichi_kanjo_timetable.json", "utf-8")) as Array<{ station_code: string }>;
+  const inData = new Set(rows.map((r) => r.station_code));
+  inData.delete("yakusa"); // 八草は結節点なので line_type を持たない
+  assert.deepEqual([...inData].filter((c) => !master.has(c)).sort(), [], "時刻表にあるが駅マスタにない駅");
+  assert.deepEqual([...master].filter((c) => !inData.has(c)).sort(), [], "駅マスタにあるが時刻表にない駅");
+  assert.equal(master.size, 22); // 愛環23駅から結節点の八草を除いた数
 });
 
 // ---- リニモ（公式照合済みの既知値） ----
