@@ -19,6 +19,7 @@ import {
   DEFAULT_DESTINATION,
   type DiaType,
 } from "@/lib/timetable";
+import { getDiaOverrides } from "@/lib/diaOverrides";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -39,9 +40,11 @@ export async function GET(req: NextRequest) {
     `${String(nowJST.getUTCHours()).padStart(2, "0")}:${String(nowJST.getUTCMinutes()).padStart(2, "0")}:${String(nowJST.getUTCSeconds()).padStart(2, "0")}`;
   const dateStr = testDate ?? getTodayStr();
 
-  const diaType = getDiaType(dateStr);
-  const dayType = getDayType(dateStr);
-  const tomorrowDiaType = getDiaType(getTomorrowStr(dateStr));
+  // 管理画面から入れた臨時ダイヤの上書きを最優先で適用する
+  const { overrides } = await getDiaOverrides();
+  const diaType = getDiaType(dateStr, overrides);
+  const dayType = getDayType(dateStr, overrides);
+  const tomorrowDiaType = getDiaType(getTomorrowStr(dateStr), overrides);
 
   let destination = searchParams.get("destination") ?? DEFAULT_DESTINATION;
   let origin = searchParams.get("origin") ?? DEFAULT_DESTINATION;

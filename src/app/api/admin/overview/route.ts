@@ -11,6 +11,7 @@ import linimoRaw from "@/data/linimo_timetable.json";
 import aikanRaw from "@/data/aichi_kanjo_timetable.json";
 import scheduleRaw from "@/data/shuttle_schedule.json";
 import noticesRaw from "@/data/notices.json";
+import { getDiaOverrides } from "@/lib/diaOverrides";
 
 export async function GET(req: NextRequest) {
   const denied = checkAdminAuth(req);
@@ -18,6 +19,9 @@ export async function GET(req: NextRequest) {
 
   const today = getTodayStr();
   const tomorrow = getTomorrowStr(today);
+  const { overrides, source: overrides_source, fetched_at } = await getDiaOverrides();
+  const todayDia = getDiaType(today, overrides);
+  const tomorrowDia = getDiaType(tomorrow, overrides);
   const schedule = scheduleRaw as Array<{ operation_date: string }>;
   const scheduleDates = schedule.map((s) => s.operation_date).sort();
   const notices = noticesRaw as Array<{ active: boolean }>;
@@ -26,10 +30,16 @@ export async function GET(req: NextRequest) {
     success: true,
     data: {
       today,
-      today_dia: getDiaType(today),
-      today_dia_description: DIA_TYPE_DESCRIPTIONS[getDiaType(today)] ?? "",
-      tomorrow_dia: getDiaType(tomorrow),
-      tomorrow_dia_description: DIA_TYPE_DESCRIPTIONS[getDiaType(tomorrow)] ?? "",
+      today_dia: todayDia,
+      today_dia_description: DIA_TYPE_DESCRIPTIONS[todayDia] ?? "",
+      tomorrow_dia: tomorrowDia,
+      tomorrow_dia_description: DIA_TYPE_DESCRIPTIONS[tomorrowDia] ?? "",
+      // 上書きが効いているかを管理者が確認できるようにする
+      today_dia_base: getDiaType(today),
+      tomorrow_dia_base: getDiaType(tomorrow),
+      overrides_total: overrides.length,
+      overrides_source,
+      overrides_fetched_at: fetched_at,
       datasets: {
         shuttle_bus: (shuttleRaw as unknown[]).length,
         linimo: (linimoRaw as unknown[]).length,

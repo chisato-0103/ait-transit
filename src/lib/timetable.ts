@@ -28,6 +28,14 @@ export interface Station {
   line_type: string | null;
 }
 
+/** 管理画面から手動で入れる臨時ダイヤの上書き。日付単位でダイヤ種別を差し替える */
+export interface DiaOverride {
+  operation_date: string;
+  dia_type: DiaType;
+  memo?: string;
+  updated_at: string;
+}
+
 export interface ShuttleBusEntry {
   dia_type: string;
   direction: string;
@@ -152,7 +160,17 @@ export function timeGte(a: string, b: string): boolean {
 // ダイヤ判定
 // ============================================================
 
-export function getDiaType(dateStr: string): DiaType {
+export const DIA_TYPES: readonly DiaType[] = ["A", "B", "C", "holiday"];
+
+export function isDiaType(value: unknown): value is DiaType {
+  return typeof value === "string" && (DIA_TYPES as readonly string[]).includes(value);
+}
+
+export function getDiaType(dateStr: string, overrides?: DiaOverride[]): DiaType {
+  // 臨時上書きが最優先。日付が重複していれば先頭を採用し、不正なダイヤ種別は無視する
+  const override = overrides?.find((o) => o.operation_date === dateStr && isDiaType(o.dia_type));
+  if (override) return override.dia_type;
+
   const schedule = (shuttleScheduleRaw as Array<{ operation_date: string; dia_type: string }>).find(
     (s) => s.operation_date === dateStr
   );
@@ -168,8 +186,8 @@ export function getDiaType(dateStr: string): DiaType {
   return "A";
 }
 
-export function getDayType(dateStr: string): DayType {
-  const diaType = getDiaType(dateStr);
+export function getDayType(dateStr: string, overrides?: DiaOverride[]): DayType {
+  const diaType = getDiaType(dateStr, overrides);
   return diaType === "A" ? "weekday_green" : "holiday_red";
 }
 

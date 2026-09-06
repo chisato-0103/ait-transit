@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx scripts/timetable.test.ts"
+    "test": "tsx scripts/timetable.test.ts && tsx scripts/diaOverrides.test.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

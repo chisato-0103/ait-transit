@@ -13,6 +13,8 @@ import {
   calculateUniversityToStation,
   calculateStationToUniversity,
   isExtraShuttleWindow,
+  type DiaOverride,
+  type DiaType,
 } from "../src/lib/timetable";
 
 let count = 0;
@@ -45,6 +47,45 @@ test("運行カレンダー: 平日授業期間=A / 6月の土曜=休 / 8月平�
 test("dayType: A=weekday_green、それ以外=holiday_red", () => {
   assert.equal(getDayType("2026-06-12"), "weekday_green");
   assert.equal(getDayType("2026-08-05"), "holiday_red");
+});
+
+// ---- 臨時ダイヤ上書き ----
+function override(date: string, dia: string, memo?: string): DiaOverride {
+  return { operation_date: date, dia_type: dia as DiaOverride["dia_type"], memo, updated_at: "2026-09-06T09:00:00+09:00" };
+}
+
+test("上書きがある日はカレンダーより上書きが優先される", () => {
+  assert.equal(getDiaType("2026-06-12"), "A");
+  assert.equal(getDiaType("2026-06-12", [override("2026-06-12", "B")]), "B");
+  assert.equal(getDayType("2026-06-12", [override("2026-06-12", "B")]), "holiday_red");
+});
+test("上書きが空・日付不一致なら既存の判定のまま", () => {
+  assert.equal(getDiaType("2026-06-12", []), "A");
+  assert.equal(getDiaType("2026-06-12", [override("2026-06-15", "C")]), "A");
+});
+test("不正なダイヤ種別の上書きは無視される", () => {
+  assert.equal(getDiaType("2026-06-12", [override("2026-06-12", "X")]), "A");
+});
+test("同じ日付が重複したら先頭の行を採用する", () => {
+  assert.equal(getDiaType("2026-06-12", [override("2026-06-12", "C"), override("2026-06-12", "B")]), "C");
+});
+test("holidayへの上書きはその日を全便運休にする", () => {
+  const dia = getDiaType("2026-06-12", [override("2026-06-12", "holiday", "臨時休講のため運休")]);
+  assert.equal(getNextShuttleBuses("to_university", "0:00:00", dia, 5).length, 0);
+  assert.equal(getLastShuttleBus("to_yagusa", dia), undefined);
+});
+test("A→Bに上書きした日の乗継計算はBダイヤの便を返す", () => {
+  const dia = getDiaType("2026-06-12", [override("2026-06-12", "B")]);
+  assert.equal(dia, "B");
+  const busTimes = (d: DiaType) =>
+    new Set(getNextShuttleBuses("to_university", "0:00:00", d, 500).map((b) => formatTime(b.departure_time)));
+  const r = calculateStationToUniversity("setoshi", "11:00:00", dia, "holiday_red", 1)[0];
+  assert.ok(r?.shuttle_departure);
+  // 実際にBダイヤの時刻表にある便が選ばれ、Aダイヤのままの結果とは異なること
+  assert.ok(busTimes("B").has(r.shuttle_departure));
+  assert.ok(!busTimes("A").has(r.shuttle_departure));
+  const asIsA = calculateStationToUniversity("setoshi", "11:00:00", "A", "weekday_green", 1)[0];
+  assert.notEqual(r.shuttle_departure, asIsA.shuttle_departure);
 });
 
 // ---- リニモ（公式照合済みの既知値） ----
