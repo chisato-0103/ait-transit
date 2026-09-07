@@ -3,19 +3,18 @@ import { getSiteUrl } from "@/lib/siteUrl";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = getSiteUrl();
-  const lastModified = new Date();
 
+  // lastModified は入れない。ビルドのたびに更新日が変わり、
+  // 実際は更新していないのに更新扱いになってGoogleに信用されなくなるため
   // /admin は検索対象外のため載せない
   return [
     {
       url: `${siteUrl}/`,
-      lastModified,
       changeFrequency: "daily",
       priority: 1,
     },
     {
       url: `${siteUrl}/contact`,
-      lastModified,
       changeFrequency: "yearly",
       priority: 0.5,
     },
