@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 // サイト共通のメタデータ定数
 export const SITE_NAME = "愛工大交通情報システム";
 
@@ -19,15 +21,17 @@ const OG_IMAGE = {
 
 // Next.js の openGraph / twitter は深いマージをしない。
 // 子ページで上書きするときは必ずこの基底を展開し、
-// 共通属性（type / locale / siteName / images）が消えないようにすること
+// 共通属性（type / locale / siteName / images）が消えないようにすること。
+// satisfies を付けているのはプロパティ名の打ち間違いを tsc に検出させるため
+// （スプレッド経由だと余剰プロパティチェックが効かず、静かに欠落する）
 export const BASE_OPEN_GRAPH = {
-  type: "website" as const,
+  type: "website",
   locale: "ja_JP",
   siteName: SITE_NAME,
   images: [OG_IMAGE],
-};
+} satisfies NonNullable<Metadata["openGraph"]>;
 
 export const BASE_TWITTER = {
-  card: "summary_large_image" as const,
+  card: "summary_large_image",
   images: [OG_IMAGE],
-};
+} satisfies NonNullable<Metadata["twitter"]>;
