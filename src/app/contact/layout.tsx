@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_NAME } from "@/lib/siteMeta";
+import { BASE_OPEN_GRAPH, BASE_TWITTER } from "@/lib/siteMeta";
 
 const TITLE = "お問い合わせ";
 const DESCRIPTION =
@@ -10,14 +10,17 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/contact" },
-  // openGraph は深いマージをされないため、親の type / locale / siteName も再指定する
+  // openGraph / twitter は深いマージをされないため、基底を展開して共通属性を維持する
   openGraph: {
-    type: "website",
-    locale: "ja_JP",
-    siteName: SITE_NAME,
+    ...BASE_OPEN_GRAPH,
     title: TITLE,
     description: DESCRIPTION,
     url: "/contact",
+  },
+  twitter: {
+    ...BASE_TWITTER,
+    title: TITLE,
+    description: DESCRIPTION,
   },
 };
 

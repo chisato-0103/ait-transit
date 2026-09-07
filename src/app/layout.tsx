@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { SITE_NAME, DESCRIPTION, TITLE } from "@/lib/siteMeta";
+import { SITE_NAME, DESCRIPTION, TITLE, BASE_OPEN_GRAPH, BASE_TWITTER } from "@/lib/siteMeta";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,14 +13,12 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   // canonical と openGraph.url はURL固有のため各ページ側で指定する
   openGraph: {
-    type: "website",
-    locale: "ja_JP",
-    siteName: SITE_NAME,
+    ...BASE_OPEN_GRAPH,
     title: TITLE,
     description: DESCRIPTION,
   },
   twitter: {
-    card: "summary_large_image",
+    ...BASE_TWITTER,
     title: TITLE,
     description: DESCRIPTION,
   },
