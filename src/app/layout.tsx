@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: DESCRIPTION,
+  // Google Search Console の所有権確認タグ。削除すると所有権が外れるため残すこと
+  verification: { google: "e30V6tWlyYjoqWdz6fJXdnPjuhneL5hngZ4Y1lqvoEI" },
   // canonical と openGraph.url はURL固有のため各ページ側で指定する
   openGraph: {
     ...BASE_OPEN_GRAPH,
