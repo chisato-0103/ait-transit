@@ -1,10 +1,27 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
+import { getSiteUrl } from "@/lib/siteUrl";
+import { SITE_NAME, DESCRIPTION, TITLE, BASE_OPEN_GRAPH, BASE_TWITTER } from "@/lib/siteMeta";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "愛工大交通情報システム",
-  description: "愛知工業大学 シャトルバス・リニモ乗り継ぎ案内",
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: `${TITLE} | ${SITE_NAME}`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DESCRIPTION,
+  // canonical と openGraph.url はURL固有のため各ページ側で指定する
+  openGraph: {
+    ...BASE_OPEN_GRAPH,
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  twitter: {
+    ...BASE_TWITTER,
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
