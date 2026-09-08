@@ -7,7 +7,12 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: `${TITLE} | ${SITE_NAME}`,
+    // トップページはサイト名を付けない。Googleが検索結果で
+    // 「愛工大交通情報システム: 」を自動で前置するため、
+    // 自分でも付けると名前が重複して表示文字数(全角30文字前後)を超え、
+    // 末尾の「乗継案内」が省略されてしまう
+    default: TITLE,
+    // 子ページは自分のタイトルだけでは何のサイトか分からないため付ける
     template: `%s | ${SITE_NAME}`,
   },
   description: DESCRIPTION,
