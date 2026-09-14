@@ -92,7 +92,7 @@ const LAST_SEARCH_KEY = "ait-transit:last-search";
 
 // 開発者への任意の応援（投げ銭）リンク。PayPay のマイコードURLを設定する
 // （空文字にすると応援リンク自体を表示しない）
-const SUPPORT_URL = "https://qr.paypay.ne.jp/p2p01_OXF0V9Ik02KTcGsh";
+const SUPPORT_URL = "https://qr.paypay.ne.jp/p2p01_CBebil50AeMBN19V";
 
 // ============================================================
 // ユーティリティ
