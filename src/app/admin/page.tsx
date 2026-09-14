@@ -1,5 +1,15 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import {
+  formatExpiresJst,
+  isValidExpiresAt,
+  isValidSupportUrl,
+  SUPPORT_URL_PREFIX,
+  toDatetimeLocal,
+  toExpiresAt,
+  type SupportLink,
+  type SupportLinkStatus,
+} from "@/lib/supportLink";
 
 interface Notice {
   id: number;
@@ -29,6 +39,12 @@ function todayJst(): string {
   return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
+// 過去日時の警告用。レンダー中に Date.now() を呼ばないよう、イベントハンドラと非同期コールバックからだけ使う
+function isPastExpires(localValue: string): boolean {
+  const expiresAt = toExpiresAt(localValue);
+  return isValidExpiresAt(expiresAt) && Date.parse(expiresAt) <= Date.now();
+}
+
 interface Overview {
   today: string;
   today_dia: string;
@@ -49,6 +65,7 @@ interface Overview {
   };
   notices_total: number;
   notices_active: number;
+  support_link: (SupportLink & { status: SupportLinkStatus; remaining_days: number }) | null;
   data_sources: Record<string, string>;
 }
 
@@ -78,6 +95,12 @@ export default function AdminPage() {
   const [diaResult, setDiaResult] = useState("");
   const [diaSaving, setDiaSaving] = useState(false);
   const [diaLoaded, setDiaLoaded] = useState(false);
+  const [supportUrl, setSupportUrl] = useState("");
+  const [supportExpires, setSupportExpires] = useState(""); // datetime-local の値（日本時間）
+  const [supportPast, setSupportPast] = useState(false);
+  const [supportResult, setSupportResult] = useState("");
+  const [supportSaving, setSupportSaving] = useState(false);
+  const [supportLoaded, setSupportLoaded] = useState(false);
 
   const api = useCallback(
     async (path: string, init?: RequestInit) => {
@@ -116,13 +139,22 @@ export default function AdminPage() {
         setDiaLoaded(true);
       })
       .catch(() => setDiaResult("❌ 臨時ダイヤを読み込めませんでした。ページを再読み込みしてください"));
-    fetch("/api/site-config").then(async (r) => {
-      if (r.ok) {
+    fetch("/api/site-config")
+      .then(async (r) => {
+        if (!r.ok) throw new Error("load_failed");
         const cfg = (await r.json()).data;
         setMaintenance(!!cfg.maintenance);
         setMaintenanceMsg(cfg.maintenance_message ?? "");
-      }
-    });
+        const link: SupportLink | null = cfg.support_link ?? null;
+        if (link) {
+          const localValue = toDatetimeLocal(link.expires_at);
+          setSupportUrl(link.url);
+          setSupportExpires(localValue);
+          setSupportPast(isPastExpires(localValue));
+        }
+        setSupportLoaded(true);
+      })
+      .catch(() => setSupportResult("❌ 設定を読み込めませんでした。ページを再読み込みしてください"));
   }, [authed, api]);
 
   const saveConfig = async () => {
@@ -146,6 +178,34 @@ export default function AdminPage() {
     const res = await api("/api/admin/overview");
     if (res.ok) setOverview((await res.json()).data);
   }, [api]);
+
+  const supportExpiresAt = toExpiresAt(supportExpires);
+  const supportInvalid = !isValidSupportUrl(supportUrl.trim()) || !isValidExpiresAt(supportExpiresAt);
+
+  const saveSupport = async () => {
+    setSupportSaving(true);
+    setSupportResult("");
+    try {
+      const res = await api("/api/admin/support-link", {
+        method: "PUT",
+        body: JSON.stringify({ url: supportUrl.trim(), expires_at: supportExpiresAt }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setSupportResult(`✅ ${json.detail}`);
+        await refreshOverview();
+      } else {
+        const conflict = typeof json.detail === "string" && json.detail.includes("409");
+        setSupportResult(
+          `❌ 保存失敗: ${json.detail ?? json.error}${conflict ? "（ページを再読み込みしてから再保存してください）" : ""}`
+        );
+      }
+    } catch {
+      setSupportResult("❌ 通信エラー");
+    } finally {
+      setSupportSaving(false);
+    }
+  };
 
   const updateDia = (index: number, patch: Partial<DiaOverride>) =>
     setDias((ds) => ds.map((d, i) => (i === index ? { ...d, ...patch } : d)));
@@ -236,6 +296,16 @@ export default function AdminPage() {
                 <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>運行カレンダー</td><td>{overview.datasets.schedule_days}日分（{overview.datasets.schedule_until} まで）</td></tr>
                 <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>お知らせ</td><td>{overview.notices_active}件 公開中（全{overview.notices_total}件）</td></tr>
                 <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>臨時ダイヤ</td><td>{overview.overrides_total}件 登録中</td></tr>
+                <tr>
+                  <td style={{ padding: "0.3rem 0", color: "#666" }}>応援リンク</td>
+                  <td style={{ color: overview.support_link?.status === "ok" ? undefined : "#c00" }}>
+                    {!overview.support_link
+                      ? "未設定（トップに表示されていません）"
+                      : overview.support_link.status === "expired"
+                        ? `期限切れ（${formatExpiresJst(overview.support_link.expires_at)}）— トップに表示されていません`
+                        : `期限 ${formatExpiresJst(overview.support_link.expires_at)}（あと${overview.support_link.remaining_days}日）`}
+                  </td>
+                </tr>
               </tbody>
             </table>
             <details style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "#666" }}>
@@ -324,6 +394,36 @@ export default function AdminPage() {
               {configSaving ? "保存中..." : "保存"}
             </button>
             {configResult && <span style={{ fontSize: "0.85rem" }}>{configResult}</span>}
+          </div>
+        </div>
+
+        <div className="search-area" style={{ padding: "1rem", marginBottom: "1rem" }}>
+          <h2 style={{ fontSize: "1.05rem", marginBottom: "0.75rem" }}>💰 応援リンク</h2>
+          <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.75rem" }}>
+            PayPayアプリで受け取りリンクを作り直し、表示された有効期限を入力してください。期限を過ぎるとトップページには表示されません。
+          </p>
+          <div className="form-group" style={{ marginBottom: "0.75rem" }}>
+            <label htmlFor="support-url">URL</label>
+            <input id="support-url" type="url" placeholder={`${SUPPORT_URL_PREFIX}p2p01_...`} value={supportUrl}
+              onChange={(e) => setSupportUrl(e.target.value)} style={inputStyle} />
+          </div>
+          <div className="form-group" style={{ marginBottom: "0.75rem" }}>
+            <label htmlFor="support-expires">有効期限（日本時間）</label>
+            <input id="support-expires" type="datetime-local" value={supportExpires}
+              onChange={(e) => { setSupportExpires(e.target.value); setSupportPast(isPastExpires(e.target.value)); }}
+              style={{ ...inputStyle, width: "auto" }} />
+          </div>
+          {supportPast && (
+            <p style={{ fontSize: "0.85rem", color: "#c00", marginBottom: "0.5rem" }}>⚠ 過去の日時です（保存するとリンクは表示されません）</p>
+          )}
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+            <button type="button" className="btn btn-primary" onClick={saveSupport} disabled={supportSaving || supportInvalid || !supportLoaded}>
+              {supportSaving ? "保存中..." : "保存"}
+            </button>
+            {supportInvalid && supportLoaded && (
+              <span style={{ fontSize: "0.85rem", color: "#c00" }}>URLは {SUPPORT_URL_PREFIX} で始まる形式、有効期限は必須です</span>
+            )}
+            {supportResult && <span style={{ fontSize: "0.85rem" }}>{supportResult}</span>}
           </div>
         </div>
 

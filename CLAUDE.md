@@ -96,4 +96,14 @@
    - 生成は scripts/build-shuttle-schedule.mjs で行う
      （検証に落ちたら書き込まない）
    - 運行予定表PDFを check-official-sources.mjs の監視対象に追加
+8. ✅ 応援リンクの管理画面化と期限切れ通知（2026-09-14完了）
+   - PayPay受け取りリンクは約2週間で期限切れになり、Web上では
+     有効/期限切れを区別できないため、発行時の有効期限を記録して管理する
+   - 管理画面の「💰 応援リンク」欄でURLと有効期限を更新する
+     （保存は src/data/support_link.json への GitHub commit → 自動デプロイ）
+   - 期限を過ぎるとトップページでは自動で非表示になる
+   - check-support-link ワークフローが毎日確認し、残り3日以内・期限切れで
+     担当者指定のIssueを作成（GitHub Mobile に通知）
+   - 仕様書:
+     docs/superpowers/specs/2026-09-14-support-link-admin-design.md
 完了したらこのロードマップを更新すること

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { isSupportLinkActive, type SupportLink } from "@/lib/supportLink";
 
 // ============================================================
 // 型定義
@@ -90,10 +91,6 @@ type RouteOption = "to_linimo" | "from_linimo" | "to_aichi_kanjo" | "from_aichi_
 // 前回の検索条件（路線と駅）の保存キー。方向は開いた時間帯から自動決定する
 const LAST_SEARCH_KEY = "ait-transit:last-search";
 
-// 開発者への任意の応援（投げ銭）リンク。PayPay のマイコードURLを設定する
-// （空文字にすると応援リンク自体を表示しない）
-const SUPPORT_URL = "https://qr.paypay.ne.jp/p2p01_CBebil50AeMBN19V";
-
 // ============================================================
 // ユーティリティ
 // ============================================================
@@ -155,8 +152,12 @@ export default function MainClient() {
     };
   });
 
-  // サイト設定（メンテナンスモード）
-  const [siteConfig, setSiteConfig] = useState<{ maintenance: boolean; maintenance_message: string } | null>(null);
+  // サイト設定（メンテナンスモード・応援リンク）
+  const [siteConfig, setSiteConfig] = useState<{
+    maintenance: boolean;
+    maintenance_message: string;
+    support_link?: SupportLink | null;
+  } | null>(null);
   useEffect(() => {
     fetch("/api/site-config")
       .then((r) => r.json())
@@ -164,6 +165,13 @@ export default function MainClient() {
       .catch(() => {});
   }, []);
   const inMaintenance = !!siteConfig?.maintenance;
+
+  // 応援リンクの期限判定用の実時刻（test_date のシミュレーションとは無関係）。
+  // レンダー中に Date.now() を呼ばないよう、現在時刻表示の effect で毎秒更新する
+  const [nowMs, setNowMs] = useState(0);
+  const supportLink = siteConfig?.support_link ?? null;
+  // 時刻が未取得（0）の間は期限切れでも「期限内」と判定されてしまうので表示しない
+  const showSupportLink = nowMs > 0 && isSupportLinkActive(supportLink, nowMs);
 
   // 非公式警告は初回訪問時のみ全文表示し、以降は1行に畳む
   useEffect(() => {
@@ -192,6 +200,7 @@ export default function MainClient() {
   useEffect(() => {
     const update = () => {
       const now = new Date();
+      setNowMs(now.getTime());
       setCurrentTime(
         `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`
       );
@@ -587,11 +596,11 @@ export default function MainClient() {
         <p style={{ fontSize: "0.8em", marginTop: "12px" }}>
           <a href="/contact">お問い合わせ</a>
         </p>
-        {/* 開発者への任意の応援（見返りなし）。URL未設定の間は非表示 */}
-        {SUPPORT_URL && (
+        {/* 開発者への任意の応援（見返りなし）。未設定・期限切れの間は非表示 */}
+        {showSupportLink && supportLink && (
           <>
             <p style={{ fontSize: "0.8em", marginTop: "12px" }}>
-              <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+              <a href={supportLink.url} target="_blank" rel="noopener noreferrer">
                 ☕ 開発者を応援する
               </a>
             </p>

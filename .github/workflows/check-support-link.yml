@@ -1,0 +1,66 @@
+# 応援リンク（PayPay受け取りリンク）の期限を毎日確認し、期限3日前・期限切れ・未設定でIssueを作成する
+# Issueは担当者にリポジトリオーナーを指定し、GitHub Mobile の Assigned 通知でスマホに届ける
+name: 応援リンクの期限監視
+
+on:
+  schedule:
+    # 毎日 8:00 JST (= 前日 23:00 UTC)
+    - cron: "0 23 * * *"
+  workflow_dispatch:
+    inputs:
+      test_notify:
+        description: "通知確認用のテストIssueを作成する"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: check-support-link
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: 期限を確認
+        id: check
+        run: npx tsx scripts/check-support-link.ts
+
+      - name: 期限が近ければIssueを作成
+        if: steps.check.outputs.status != 'ok'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: "💰 応援リンクの期限が近づいています"
+          BODY: ${{ steps.check.outputs.body }}
+          ASSIGNEE: ${{ github.repository_owner }}
+        run: |
+          existing=$(gh issue list --state open --limit 100 --json title | jq --arg t "$TITLE" '[.[] | select(.title == $t)] | length')
+          if [ "$existing" -gt 0 ]; then
+            echo "未解決の同じIssueがあるため作成しません"
+            exit 0
+          fi
+          gh issue create --title "$TITLE" --body "$BODY" --assignee "$ASSIGNEE"
+
+      - name: 通知確認用のテストIssueを作成
+        if: inputs.test_notify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATUS: ${{ steps.check.outputs.status }}
+          ASSIGNEE: ${{ github.repository_owner }}
+        run: |
+          gh issue create \
+            --title "[テスト] 💰 応援リンクの通知確認" \
+            --body "$(printf '通知確認用のテストIssueです。スマホに通知が届いたことを確認したら閉じてください。\n\n現在の判定: %s' "$STATUS")" \
+            --assignee "$ASSIGNEE"
