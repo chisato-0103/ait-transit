@@ -170,7 +170,8 @@ export default function MainClient() {
   // レンダー中に Date.now() を呼ばないよう、現在時刻表示の effect で毎秒更新する
   const [nowMs, setNowMs] = useState(0);
   const supportLink = siteConfig?.support_link ?? null;
-  const showSupportLink = isSupportLinkActive(supportLink, nowMs);
+  // 時刻が未取得（0）の間は期限切れでも「期限内」と判定されてしまうので表示しない
+  const showSupportLink = nowMs > 0 && isSupportLinkActive(supportLink, nowMs);
 
   // 非公式警告は初回訪問時のみ全文表示し、以降は1行に畳む
   useEffect(() => {
