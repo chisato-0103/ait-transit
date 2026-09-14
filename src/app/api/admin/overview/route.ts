@@ -11,7 +11,15 @@ import linimoRaw from "@/data/linimo_timetable.json";
 import aikanRaw from "@/data/aichi_kanjo_timetable.json";
 import scheduleRaw from "@/data/shuttle_schedule.json";
 import noticesRaw from "@/data/notices.json";
+import defaultSupportLink from "@/data/support_link.json";
+import { readDataFile } from "@/lib/adminStore";
 import { getDiaOverrides } from "@/lib/diaOverrides";
+import {
+  SUPPORT_LINK_REL_PATH,
+  getSupportLinkStatus,
+  parseSupportLinkJson,
+  remainingDays,
+} from "@/lib/supportLink";
 
 export async function GET(req: NextRequest) {
   const denied = checkAdminAuth(req);
@@ -25,6 +33,10 @@ export async function GET(req: NextRequest) {
   const schedule = scheduleRaw as Array<{ operation_date: string }>;
   const scheduleDates = schedule.map((s) => s.operation_date).sort();
   const notices = noticesRaw as Array<{ active: boolean }>;
+  const supportLink = parseSupportLinkJson(
+    await readDataFile(SUPPORT_LINK_REL_PATH, JSON.stringify(defaultSupportLink))
+  );
+  const nowMs = Date.now();
 
   return NextResponse.json({
     success: true,
@@ -49,6 +61,13 @@ export async function GET(req: NextRequest) {
       },
       notices_total: notices.length,
       notices_active: notices.filter((n) => n.active).length,
+      support_link: supportLink
+        ? {
+            ...supportLink,
+            status: getSupportLinkStatus(supportLink, nowMs),
+            remaining_days: remainingDays(supportLink, nowMs),
+          }
+        : null,
       data_sources: {
         linimo: "linimo.jp 駅別時刻表（2026-06-12照合）",
         shuttle: "ait.ac.jp access_yakusa_time_20260401.pdf（令和8年4月1日改正）",
