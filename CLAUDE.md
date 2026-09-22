@@ -106,4 +106,11 @@
      担当者指定のIssueを作成（GitHub Mobile に通知）
    - 仕様書:
      docs/superpowers/specs/2026-09-14-support-link-admin-design.md
+9. ✅ 検索エンジン対応（2026-09-09完了）
+   - robots.ts / sitemap.ts / OGP画像 / ページ別メタデータを追加（#10）
+   - /admin と /api/admin はクロール禁止。/api は描画に必要なので通し、
+     インデックス除外は next.config.ts の X-Robots-Tag で行う
+   - sitemap に lastModified は入れない（ビルドごとに更新扱いになるため）
+   - Search Console の所有権確認タグを layout.tsx に追加（#11）
+   - 検索結果での表示切れ防止のため、トップのタイトルからサイト名を外した（#12）
 完了したらこのロードマップを更新すること
