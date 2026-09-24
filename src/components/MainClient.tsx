@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { isSupportLinkActive } from "@/lib/supportLink";
 import { loadSiteConfig, type SiteConfig } from "@/lib/siteConfigClient";
 
 // ============================================================
@@ -153,19 +152,12 @@ export default function MainClient() {
     };
   });
 
-  // サイト設定（メンテナンスモード・応援リンク）。フッターと取得結果を共有する
+  // サイト設定（メンテナンスモード）。応援リンクはフッター側が同じ取得結果を使う
   const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
   useEffect(() => {
     loadSiteConfig().then(setSiteConfig);
   }, []);
   const inMaintenance = !!siteConfig?.maintenance;
-
-  // 応援リンクの期限判定用の実時刻（test_date のシミュレーションとは無関係）。
-  // レンダー中に Date.now() を呼ばないよう、現在時刻表示の effect で毎秒更新する
-  const [nowMs, setNowMs] = useState(0);
-  const supportLink = siteConfig?.support_link ?? null;
-  // 時刻が未取得（0）の間は期限切れでも「期限内」と判定されてしまうので表示しない
-  const showSupportLink = nowMs > 0 && isSupportLinkActive(supportLink, nowMs);
 
   // 非公式警告は初回訪問時のみ全文表示し、以降は1行に畳む
   useEffect(() => {
@@ -194,7 +186,6 @@ export default function MainClient() {
   useEffect(() => {
     const update = () => {
       const now = new Date();
-      setNowMs(now.getTime());
       setCurrentTime(
         `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`
       );
@@ -579,31 +570,6 @@ export default function MainClient() {
         </div>
       )}
 
-      {/* フッター */}
-      <footer className="footer">
-        <p>&copy; 2025 愛知工業大学 交通情報システム</p>
-        <p style={{ fontSize: "0.85em", marginTop: "8px" }}>
-          <strong>免責事項：</strong>本システムは愛知工業大学の学生向け通学支援を目的とした非営利の情報提供サービスです。<br />
-          時刻表データは公開情報を参考にしていますが、実際の運行状況と異なる場合があります。<br />
-          正確な時刻は<a href="https://www.linimo.jp/" target="_blank" rel="noopener noreferrer">リニモ公式サイト</a>でご確認ください。
-        </p>
-        <p style={{ fontSize: "0.8em", marginTop: "12px" }}>
-          <a href="/contact">お問い合わせ</a>
-        </p>
-        {/* 開発者への任意の応援（見返りなし）。未設定・期限切れの間は非表示 */}
-        {showSupportLink && supportLink && (
-          <>
-            <p style={{ fontSize: "0.8em", marginTop: "12px" }}>
-              <a href={supportLink.url} target="_blank" rel="noopener noreferrer">
-                ☕ 開発者を応援する
-              </a>
-            </p>
-            <p style={{ fontSize: "0.75em", marginTop: "4px", opacity: 0.8 }}>
-              このアプリが役に立ったら、よかったら応援してもらえると嬉しいです（任意・見返りはありません）。
-            </p>
-          </>
-        )}
-      </footer>
     </div>
   );
 }

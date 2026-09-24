@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import MainClient from "@/components/MainClient";
+import SiteFooter from "@/components/SiteFooter";
 import { BASE_OPEN_GRAPH, TITLE, DESCRIPTION } from "@/lib/siteMeta";
 
 export const metadata: Metadata = {
@@ -16,8 +17,11 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="loading-screen">読み込み中...</div>}>
-      <MainClient />
-    </Suspense>
+    <>
+      <Suspense fallback={<div className="loading-screen">読み込み中...</div>}>
+        <MainClient />
+      </Suspense>
+      <SiteFooter />
+    </>
   );
 }
