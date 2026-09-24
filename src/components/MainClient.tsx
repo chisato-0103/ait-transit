@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { isSupportLinkActive, type SupportLink } from "@/lib/supportLink";
+import { isSupportLinkActive } from "@/lib/supportLink";
+import { loadSiteConfig, type SiteConfig } from "@/lib/siteConfigClient";
 
 // ============================================================
 // 型定義
@@ -152,17 +153,10 @@ export default function MainClient() {
     };
   });
 
-  // サイト設定（メンテナンスモード・応援リンク）
-  const [siteConfig, setSiteConfig] = useState<{
-    maintenance: boolean;
-    maintenance_message: string;
-    support_link?: SupportLink | null;
-  } | null>(null);
+  // サイト設定（メンテナンスモード・応援リンク）。フッターと取得結果を共有する
+  const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
   useEffect(() => {
-    fetch("/api/site-config")
-      .then((r) => r.json())
-      .then((j) => setSiteConfig(j.data))
-      .catch(() => {});
+    loadSiteConfig().then(setSiteConfig);
   }, []);
   const inMaintenance = !!siteConfig?.maintenance;
 
