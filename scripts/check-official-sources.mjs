@@ -11,7 +11,8 @@ const UA = "Mozilla/5.0 (compatible; ait-transit-monitor; +https://github.com/ch
 // type:
 //  html-tables ... HTML中の<table>だけを正規化してハッシュ（お知らせ等の更新でぶれない）
 //  pdf-links   ... ページ中のPDFリンク一覧をハッシュ（改正でファイル名が変わるのを検知）
-//  binary      ... ファイルそのもののハッシュ
+//  binary      ... ファイルそのもののハッシュ（PDF）
+//  csv         ... CSVファイルそのもののハッシュ
 const SOURCES = [
   { id: "リニモ 八草駅時刻表", url: "https://www.linimo.jp/station/2018030614442117.html", type: "html-tables" },
   { id: "リニモ 藤が丘駅時刻表", url: "https://www.linimo.jp/station/2018030611485318.html", type: "html-tables" },
@@ -21,6 +22,8 @@ const SOURCES = [
   { id: "シャトルバス 運行予定表PDF", url: "https://www.ait.ac.jp/assets/docs/about/yakusa-campus/access_yakusa20260114.pdf", type: "binary" },
   { id: "愛環 時刻表ページのPDFリンク", url: "https://www.aikanrailway.co.jp/timetable/", type: "pdf-links" },
   { id: "愛環 八草駅PDF", url: "https://www.aikanrailway.co.jp/pdf/timetable/18yakusa_timetable.pdf", type: "binary" },
+  // リニモ・愛環の平日/土休日判定に使う祝日。変わったら build-japanese-holidays.mjs で再生成する
+  { id: "内閣府 国民の祝日CSV", url: "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv", type: "csv" },
 ];
 
 const sha256 = (data) => createHash("sha256").update(data).digest("hex");
@@ -42,6 +45,12 @@ async function fetchSource({ url, type }) {
     if (!buf.subarray(0, 5).toString("latin1").startsWith("%PDF")) {
       throw new Error("PDFでない応答（bot対策等の可能性）");
     }
+    return sha256(buf);
+  }
+  if (type === "csv") {
+    const buf = Buffer.from(await res.arrayBuffer());
+    // HTML（エラーページ等）が返ってきたら取得失敗として扱う
+    if (/^\s*</.test(buf.subarray(0, 64).toString("latin1"))) throw new Error("CSVでない応答");
     return sha256(buf);
   }
   const html = await res.text();

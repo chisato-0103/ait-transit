@@ -4,6 +4,7 @@ import {
   getDayType,
   getTodayStr,
   getTomorrowStr,
+  getStationByCode,
   calculateUniversityToStation,
   calculateStationToUniversity,
   calculateYagusaToUniversity,
@@ -18,6 +19,8 @@ import {
   RESULT_LIMIT,
   DEFAULT_DESTINATION,
   type DiaType,
+  type DayType,
+  type RailLine,
 } from "@/lib/timetable";
 import { getDiaOverrides } from "@/lib/diaOverrides";
 
@@ -43,11 +46,15 @@ export async function GET(req: NextRequest) {
   // 管理画面から入れた臨時ダイヤの上書きを最優先で適用する
   const { overrides } = await getDiaOverrides();
   const diaType = getDiaType(dateStr, overrides);
-  const dayType = getDayType(dateStr, overrides);
   const tomorrowDiaType = getDiaType(getTomorrowStr(dateStr), overrides);
 
   let destination = searchParams.get("destination") ?? DEFAULT_DESTINATION;
   let origin = searchParams.get("origin") ?? DEFAULT_DESTINATION;
+
+  // 平日/土休日の定義は路線ごとに違うので、案内する駅の路線で判定する（八草はシャトルのみで不要）
+  const lineType = getStationByCode(direction === "to_station" ? destination : origin)?.line_type;
+  const railLine: RailLine | null = lineType === "linimo" || lineType === "aichi_kanjo" ? lineType : null;
+  const dayType: DayType = getDayType(railLine ?? "linimo", dateStr);
   let fromName = "";
   let toName = "";
   let routes: ReturnType<typeof calculateUniversityToStation> = [];
@@ -104,8 +111,8 @@ export async function GET(req: NextRequest) {
       current_time: currentTime,
       dia_type: diaType,
       dia_description: DIA_TYPE_DESCRIPTIONS[diaType] ?? `ダイヤ${diaType}`,
-      day_type: dayType,
-      day_description: DAY_TYPE_DESCRIPTIONS[dayType] ?? "",
+      day_type: railLine ? dayType : null,
+      day_description: railLine ? DAY_TYPE_DESCRIPTIONS[railLine][dayType] : "",
       direction,
       line_code: lineCode,
       from_name: fromName,
