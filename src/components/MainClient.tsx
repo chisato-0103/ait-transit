@@ -378,6 +378,10 @@ export default function MainClient() {
               本日の終バス（{apiData.last_shuttle_label}） {apiData.last_shuttle}
             </div>
           )}
+          {/* 運休日は便がないため「便が見つかりませんでした」の理由をここで示す */}
+          {apiData?.dia_type === "holiday" && (
+            <div className="last-bus-chip">🚫 本日はシャトルバス運休日です</div>
+          )}
         </div>
 
         {/* ルート検索（折りたたみ） */}
@@ -561,15 +565,6 @@ export default function MainClient() {
           </section>
         )}
       </div>
-
-      {/* ダイヤ情報 */}
-      {apiData && (
-        <div className="dia-info">
-          <span>本日のダイヤ: {apiData.dia_description}</span>
-          {apiData.day_description && <span> / {apiData.day_description}</span>}
-        </div>
-      )}
-
     </div>
   );
 }

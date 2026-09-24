@@ -519,11 +519,6 @@ a { color: var(--primary-color); }
 .shuttle-dia-body > .shuttle-timetable-note { flex-basis: 100%; margin: 0; }
 
 /* ===================================
-   ダイヤ情報フッター
-   =================================== */
-.dia-info { text-align: center; font-size: 0.8rem; color: #888; padding: 0.5rem 1rem 1rem; }
-
-/* ===================================
    レスポンシブ
    =================================== */
 @media (max-width: 480px) {
