@@ -15,6 +15,7 @@ import {
   calculateUniversityToStation,
   calculateStationToUniversity,
   isExtraShuttleWindow,
+  DIA_TYPE_DESCRIPTIONS,
   type DiaOverride,
   type DiaType,
 } from "../src/lib/timetable";
@@ -49,6 +50,10 @@ test("運行カレンダー: 平日授業期間=A / 6月の土曜=休 / 8月の�
 test("dayType: A=weekday_green、それ以外=holiday_red", () => {
   assert.equal(getDayType("2026-06-12"), "weekday_green");
   assert.equal(getDayType("2026-08-17"), "holiday_red");
+});
+// 公式PDFにダイヤ種別の定義はないため、期間・曜日を推測した説明を付けない
+test("ダイヤ説明は公式表記どおり種別名だけにする", () => {
+  assert.deepEqual(DIA_TYPE_DESCRIPTIONS, { A: "Aダイヤ", B: "Bダイヤ", C: "Cダイヤ", holiday: "運休日" });
 });
 // 曜日から機械的に決めず、公式運行予定表（access_yakusa*.pdf）どおりであること
 test("行事日は土日でも運行する", () => {

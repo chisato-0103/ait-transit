@@ -28,9 +28,9 @@ interface DiaOverride {
 }
 
 const DIA_LABELS: Record<string, string> = {
-  A: "Aダイヤ（授業期間平日）",
-  B: "Bダイヤ（土曜）",
-  C: "Cダイヤ（学校休業期間平日）",
+  A: "Aダイヤ",
+  B: "Bダイヤ",
+  C: "Cダイヤ",
   holiday: "運休日（全便なし）",
 };
 
@@ -290,8 +290,8 @@ export default function AdminPage() {
             <h2 style={{ fontSize: "1.05rem", marginBottom: "0.75rem" }}>📊 ダッシュボード</h2>
             <table style={{ width: "100%", fontSize: "0.9rem", borderCollapse: "collapse" }}>
               <tbody>
-                <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>本日（{overview.today}）</td><td>{overview.today_dia}ダイヤ — {overview.today_dia_description}</td></tr>
-                <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>明日</td><td>{overview.tomorrow_dia}ダイヤ — {overview.tomorrow_dia_description}</td></tr>
+                <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>本日（{overview.today}）</td><td>{overview.today_dia_description}</td></tr>
+                <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>明日</td><td>{overview.tomorrow_dia_description}</td></tr>
                 <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>データ件数</td><td>シャトル {overview.datasets.shuttle_bus} / リニモ {overview.datasets.linimo} / 愛環 {overview.datasets.aichi_kanjo}</td></tr>
                 <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>運行カレンダー</td><td>{overview.datasets.schedule_days}日分（{overview.datasets.schedule_until} まで）</td></tr>
                 <tr><td style={{ padding: "0.3rem 0", color: "#666" }}>お知らせ</td><td>{overview.notices_active}件 公開中（全{overview.notices_total}件）</td></tr>
