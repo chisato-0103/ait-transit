@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import MainClient from "@/components/MainClient";
+import ShuttleTimetableSection from "@/components/ShuttleTimetableSection";
 import SiteFooter from "@/components/SiteFooter";
 import { BASE_OPEN_GRAPH, TITLE, DESCRIPTION } from "@/lib/siteMeta";
 
@@ -21,6 +22,7 @@ export default function Home() {
       <Suspense fallback={<div className="loading-screen">読み込み中...</div>}>
         <MainClient />
       </Suspense>
+      <ShuttleTimetableSection />
       <SiteFooter />
     </>
   );
