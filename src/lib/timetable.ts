@@ -7,6 +7,7 @@ import linimoTimetableRaw from "@/data/linimo_timetable.json";
 import aichiKanjoTimetableRaw from "@/data/aichi_kanjo_timetable.json";
 import stationsRaw from "@/data/stations.json";
 import shuttleScheduleRaw from "@/data/shuttle_schedule.json";
+import japaneseHolidaysRaw from "@/data/japanese_holidays.json";
 
 // ============================================================
 // 型定義
@@ -14,6 +15,7 @@ import shuttleScheduleRaw from "@/data/shuttle_schedule.json";
 
 export type DiaType = "A" | "B" | "C" | "holiday";
 export type DayType = "weekday_green" | "holiday_red";
+export type RailLine = "linimo" | "aichi_kanjo";
 export type Direction = "to_station" | "to_university";
 export type ShuttleDirection = "to_university" | "to_yagusa";
 export type LinimoDirection = "to_fujigaoka" | "to_yagusa";
@@ -120,9 +122,16 @@ export const DIA_TYPE_DESCRIPTIONS: Record<string, string> = {
   holiday: "運休日",
 };
 
-export const DAY_TYPE_DESCRIPTIONS: Record<string, string> = {
-  weekday_green: "平日（4月〜7月、10月〜1月）",
-  holiday_red: "土休日・学校休業期間（8月、9月、2月、3月）",
+// 公式表記に合わせる。リニモ: linimo.jp 駅ページのオレンジ時刻の注記 / 愛環: 全体時刻表の「土・休日運休」
+export const DAY_TYPE_DESCRIPTIONS: Record<RailLine, Record<DayType, string>> = {
+  linimo: {
+    weekday_green: "リニモ 平日ダイヤ",
+    holiday_red: "リニモ 土休日・学校休業期間ダイヤ（土日祝と8・9・2・3月の平日）",
+  },
+  aichi_kanjo: {
+    weekday_green: "愛環 平日ダイヤ",
+    holiday_red: "愛環 土休日ダイヤ（土日祝）",
+  },
 };
 
 // ============================================================
@@ -186,9 +195,32 @@ export function getDiaType(dateStr: string, overrides?: DiaOverride[]): DiaType 
   return "A";
 }
 
-export function getDayType(dateStr: string, overrides?: DiaOverride[]): DayType {
-  const diaType = getDiaType(dateStr, overrides);
-  return diaType === "A" ? "weekday_green" : "holiday_red";
+// 鉄道の平日/土休日はシャトルのダイヤ種別（大学の行事予定）とは無関係に、暦で決まる
+const JAPANESE_HOLIDAYS = new Set((japaneseHolidaysRaw as Array<{ date: string }>).map((h) => h.date));
+
+export function isJapaneseHoliday(dateStr: string): boolean {
+  return JAPANESE_HOLIDAYS.has(dateStr);
+}
+
+function isWeekendOrHoliday(dateStr: string): boolean {
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const dow = new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
+  return dow === 0 || dow === 6 || isJapaneseHoliday(dateStr);
+}
+
+// リニモのオレンジ時刻は「土休日と8・9・2・3月の平日（学校休業期間）」に運転（linimo.jp 駅ページ）
+export function getLinimoDayType(dateStr: string): DayType {
+  const month = Number(dateStr.split("-")[1]);
+  return isWeekendOrHoliday(dateStr) || [8, 9, 2, 3].includes(month) ? "holiday_red" : "weekday_green";
+}
+
+// 愛環の平日のみの便は「土・休日運休」（全体時刻表）。学校の休業期間は関係しない
+export function getAichiKanjoDayType(dateStr: string): DayType {
+  return isWeekendOrHoliday(dateStr) ? "holiday_red" : "weekday_green";
+}
+
+export function getDayType(line: RailLine, dateStr: string): DayType {
+  return line === "linimo" ? getLinimoDayType(dateStr) : getAichiKanjoDayType(dateStr);
 }
 
 function nowJST(): Date {

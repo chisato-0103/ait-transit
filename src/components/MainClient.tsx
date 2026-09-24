@@ -73,7 +73,7 @@ interface ApiData {
   current_time: string;
   dia_type: string;
   dia_description: string;
-  day_type: string;
+  day_type: string | null;
   day_description: string;
   direction: string;
   line_code: string;
