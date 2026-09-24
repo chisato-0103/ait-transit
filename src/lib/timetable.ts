@@ -113,10 +113,12 @@ export const TRANSFER_TIME_MINUTES = 5;
 export const RESULT_LIMIT = 3;
 export const DEFAULT_DESTINATION = "fujigaoka";
 
+// 公式の時刻表・運行予定表PDFは「Aダイヤ」等としか表記しておらず、期間や曜日の定義はない。
+// 実際にBダイヤの平日やAダイヤの土日もあるため、推測の説明を付けない
 export const DIA_TYPE_DESCRIPTIONS: Record<string, string> = {
-  A: "授業期間平日（4月〜7月、10月〜1月）",
-  B: "土曜日",
-  C: "学校休業期間（8月、9月、2月、3月の平日）",
+  A: "Aダイヤ",
+  B: "Bダイヤ",
+  C: "Cダイヤ",
   holiday: "運休日",
 };
 
