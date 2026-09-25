@@ -15,13 +15,19 @@ export interface HourRow {
   minutes: string[];
 }
 
+const TIME_FORMAT = /^(\d{1,2}):(\d{2}):(\d{2})$/;
+
 // "8:05:00" のようなゼロ埋めなしも受け付ける。
-// 誤った時刻を黙って表示しないよう、数値にできなければ例外にしてビルドを止める
+// 誤った時刻を黙って表示しないよう、形式・範囲が不正なら例外にしてビルドを止める
 function parseHourMinute(time: string): { hour: number; minute: number } {
-  const [h, m] = time.split(":");
-  const hour = Number(h);
-  const minute = Number(m);
-  if (!Number.isInteger(hour) || !Number.isInteger(minute)) {
+  const match = TIME_FORMAT.exec(time);
+  if (!match) {
+    throw new Error(`不正な時刻: ${time}`);
+  }
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const second = Number(match[3]);
+  if (hour > 23 || minute > 59 || second > 59) {
     throw new Error(`不正な時刻: ${time}`);
   }
   return { hour, minute };

@@ -36,6 +36,32 @@ test("数値にできない時刻は例外にする", () => {
   assert.throws(() => groupShuttleByHour(bad, "A", "to_university"), /不正な時刻/);
 });
 
+test("不正な形式・範囲外の時刻はすべて例外にする", () => {
+  const invalidTimes = [
+    ":05:00",
+    "08::00",
+    "08:60:00",
+    "24:00:00",
+    "08:05:60",
+    "08:05",
+    "08:05:00:00",
+    "xx:05:00",
+  ];
+  for (const time of invalidTimes) {
+    const bad: ShuttleRow[] = [{ dia_type: "A", direction: "to_university", departure_time: time }];
+    assert.throws(
+      () => groupShuttleByHour(bad, "A", "to_university"),
+      /不正な時刻/,
+      `${time} が例外にならなかった`
+    );
+  }
+});
+
+test("深夜0時台の時刻は有効として扱われる", () => {
+  const midnight: ShuttleRow[] = [{ dia_type: "A", direction: "to_university", departure_time: "0:07:00" }];
+  assert.deepStrictEqual(groupShuttleByHour(midnight, "A", "to_university"), [{ hour: 0, minutes: ["07"] }]);
+});
+
 test("実データ: A/B/C × 両方向の合計が JSON の全件（269）と一致する", () => {
   const all = timetable as ShuttleRow[];
   let total = 0;
