@@ -18,8 +18,8 @@ export default function SupportLinkNote() {
   useEffect(() => {
     const update = () => setNowMs(Date.now());
     update();
-    // 期限は分単位なので 1 分ごとで足りる
-    const id = setInterval(update, 60_000);
+    // 期限切れ直後に非表示にするため、従来どおり 1 秒ごとに更新する
+    const id = setInterval(update, 1000);
     return () => clearInterval(id);
   }, []);
 
