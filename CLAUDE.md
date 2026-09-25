@@ -113,4 +113,14 @@
    - sitemap に lastModified は入れない（ビルドごとに更新扱いになるため）
    - Search Console の所有権確認タグを layout.tsx に追加（#11）
    - 検索結果での表示切れ防止のため、トップのタイトルからサイト名を外した（#12）
+10. ✅ トップページのシャトルバス検索対策（2026-09-25完了）
+   - 初期HTMLが「読み込み中...」だけだったため、サーバー描画の
+     シャトルバス時刻表区画（折りたたみ・全269便）をお知らせの下に追加
+   - ダイヤ名は公式表記の A/B/C のみ。DIA_TYPE_DESCRIPTIONS は実態と
+     合わない（B=土曜日 等）ため区画では使わない
+   - フッターを MainClient の外へ出し、/api/site-config の取得は
+     siteConfigClient で 1 回に共有
+   - 「本日のダイヤ」行を廃止し、運休日だけ現在時刻カードに表示
+   - 仕様書:
+     docs/superpowers/specs/2026-09-23-top-page-shuttle-seo-design.md
 完了したらこのロードマップを更新すること
