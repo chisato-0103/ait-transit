@@ -7,6 +7,7 @@ import {
   formatTime,
   getDiaType,
   getDayType,
+  isJapaneseHoliday,
   getAllStations,
   getNextLinimoTrains,
   getNextAichiKanjoTrains,
@@ -15,6 +16,7 @@ import {
   calculateUniversityToStation,
   calculateStationToUniversity,
   isExtraShuttleWindow,
+  DIA_TYPE_DESCRIPTIONS,
   type DiaOverride,
   type DiaType,
 } from "../src/lib/timetable";
@@ -46,9 +48,51 @@ test("運行カレンダー: 平日授業期間=A / 6月の土曜=休 / 8月の�
   assert.equal(getDiaType("2026-06-13"), "holiday");
   assert.equal(getDiaType("2026-08-17"), "C");
 });
-test("dayType: A=weekday_green、それ以外=holiday_red", () => {
-  assert.equal(getDayType("2026-06-12"), "weekday_green");
-  assert.equal(getDayType("2026-08-17"), "holiday_red");
+// 鉄道の平日/土休日は暦で決まり、シャトルのダイヤ種別（大学の行事予定）とは無関係
+test("リニモ: 土日祝と8・9・2・3月の平日が土休日ダイヤ（linimo.jp のオレンジ時刻の定義）", () => {
+  assert.equal(getDayType("linimo", "2026-06-12"), "weekday_green"); // 平日・A
+  assert.equal(getDayType("linimo", "2026-04-01"), "weekday_green"); // 4月の平日・C
+  assert.equal(getDayType("linimo", "2026-11-05"), "weekday_green"); // 平日・B
+  assert.equal(getDayType("linimo", "2026-12-28"), "weekday_green"); // 平日・シャトル運休
+  assert.equal(getDayType("linimo", "2026-08-17"), "holiday_red");   // 8月の平日・C
+  assert.equal(getDayType("linimo", "2026-09-24"), "holiday_red");   // 9月の平日・A
+  assert.equal(getDayType("linimo", "2027-02-01"), "holiday_red");   // 2月の平日・A
+  assert.equal(getDayType("linimo", "2026-10-10"), "holiday_red");   // 大学祭の土曜・A
+  assert.equal(getDayType("linimo", "2026-11-03"), "holiday_red");   // 祝日・A
+});
+test("愛環: 土日祝だけが土休日ダイヤ（学校休業期間は関係しない）", () => {
+  assert.equal(getDayType("aichi_kanjo", "2026-06-12"), "weekday_green");
+  assert.equal(getDayType("aichi_kanjo", "2026-08-17"), "weekday_green"); // 8月の平日・C
+  assert.equal(getDayType("aichi_kanjo", "2026-09-24"), "weekday_green");
+  assert.equal(getDayType("aichi_kanjo", "2027-03-04"), "weekday_green"); // 平日・B
+  assert.equal(getDayType("aichi_kanjo", "2026-10-11"), "holiday_red");   // 大学祭の日曜・A
+  assert.equal(getDayType("aichi_kanjo", "2026-09-22"), "holiday_red");   // 国民の休日
+  assert.equal(getDayType("aichi_kanjo", "2027-03-22"), "holiday_red");   // 振替休日
+});
+test("鉄道の平日/土休日はシャトルの臨時上書きの影響を受けない", () => {
+  const dia = getDiaType("2026-06-12", [override("2026-06-12", "holiday")]);
+  assert.equal(dia, "holiday");
+  assert.equal(getDayType("linimo", "2026-06-12"), "weekday_green");
+  assert.equal(getDayType("aichi_kanjo", "2026-06-12"), "weekday_green");
+});
+test("祝日データがシャトル運行カレンダーの最終日の年まで収録されている", () => {
+  const schedule = JSON.parse(readFileSync("src/data/shuttle_schedule.json", "utf-8")) as Array<{ operation_date: string }>;
+  const holidays = JSON.parse(readFileSync("src/data/japanese_holidays.json", "utf-8")) as Array<{ date: string }>;
+  // 範囲外の祝日は平日扱いになってしまうので、運行カレンダー更新時にここで止める
+  const lastYear = schedule.map((r) => r.operation_date).sort().at(-1)!.slice(0, 4);
+  const inYear = holidays.filter((h) => h.date.startsWith(`${lastYear}-`)).length;
+  assert.ok(inYear >= 15, `${lastYear}年の祝日が ${inYear} 日しか収録されていない（build-japanese-holidays.mjs で再生成）`);
+  assert.ok(isJapaneseHoliday("2026-11-23"));
+  assert.ok(!isJapaneseHoliday("2026-11-24"));
+});
+test("愛環: 平日のみのJR直通便は8月の平日に出て、土休日には出ない", () => {
+  const trains = (date: string) =>
+    getNextAichiKanjoTrains("setoshi", "to_okazaki", "0:00:00", getDayType("aichi_kanjo", date), 500).length;
+  assert.ok(trains("2026-08-17") > trains("2026-08-16"), "8月の平日が土休日と同じ本数になっている");
+});
+// 公式PDFにダイヤ種別の定義はないため、期間・曜日を推測した説明を付けない
+test("ダイヤ説明は公式表記どおり種別名だけにする", () => {
+  assert.deepEqual(DIA_TYPE_DESCRIPTIONS, { A: "Aダイヤ", B: "Bダイヤ", C: "Cダイヤ", holiday: "運休日" });
 });
 // 曜日から機械的に決めず、公式運行予定表（access_yakusa*.pdf）どおりであること
 test("行事日は土日でも運行する", () => {
@@ -76,7 +120,6 @@ function override(date: string, dia: string, memo?: string): DiaOverride {
 test("上書きがある日はカレンダーより上書きが優先される", () => {
   assert.equal(getDiaType("2026-06-12"), "A");
   assert.equal(getDiaType("2026-06-12", [override("2026-06-12", "B")]), "B");
-  assert.equal(getDayType("2026-06-12", [override("2026-06-12", "B")]), "holiday_red");
 });
 test("上書きが空・日付不一致なら既存の判定のまま", () => {
   assert.equal(getDiaType("2026-06-12", []), "A");
